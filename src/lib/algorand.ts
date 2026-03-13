@@ -111,14 +111,19 @@ export async function fetchUserAssets(address: string) {
     if (!addr) return [];
     try {
         const response = await indexerClient.lookupAccountAssets(addr).do();
-        // v3 migration: convert BigInt fields to Number for JSON serialization in the UI
-        return (response.assets || []).map((asset: any) => ({
-            ...asset,
-            assetId: Number(asset.assetId),
-            amount: Number(asset.amount),
-            optedInAtRound: asset.optedInAtRound ? Number(asset.optedInAtRound) : undefined,
-            optedOutAtRound: asset.optedOutAtRound ? Number(asset.optedOutAtRound) : undefined
-        }));
+        console.log("[DEBUG] Raw Indexer Assets:", response.assets);
+        // v2/v3 compatibility check: handle both asset-id and assetId
+        return (response.assets || []).map((asset: any) => {
+            const id = asset.assetId || asset['asset-id'];
+            const amt = asset.amount !== undefined ? asset.amount : asset['amount'];
+            return {
+                ...asset,
+                assetId: Number(id),
+                amount: Number(amt),
+                optedInAtRound: asset.optedInAtRound ? Number(asset.optedInAtRound) : undefined,
+                optedOutAtRound: asset.optedOutAtRound ? Number(asset.optedOutAtRound) : undefined
+            };
+        });
     } catch (e) {
         console.error("fetchUserAssets error:", e);
         return [];

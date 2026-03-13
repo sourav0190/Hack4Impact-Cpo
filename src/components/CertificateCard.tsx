@@ -42,7 +42,7 @@ export default function CertificateCard({ asset, onGenerateProof, onShareBadge }
                     className="w-full bg-gold/5 hover:bg-gold text-gold hover:text-black font-semibold py-2.5 rounded-lg border border-gold transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_15px_rgba(235,203,144,0.3)]"
                 >
                     <ShieldCheck size={16} />
-                    Prove CGPA Claim
+                    {asset.name?.includes("Badge") ? "Verify Skill" : "Prove CGPA Claim"}
                 </button>
                 <div className="flex gap-2">
                      <button 

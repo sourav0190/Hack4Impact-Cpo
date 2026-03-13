@@ -116,18 +116,31 @@ export const authOptions: NextAuthOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, account }) {
             if (user) {
-                token.role = (user as any).role;
+                token.role = (user as any).role?.toUpperCase() || "STUDENT";
                 token.address = (user as any).address;
+                console.log("[AUTH] JWT Callback - Setting token:", { role: token.role, address: token.address });
             }
             return token;
         },
         async session({ session, token }) {
-            if (session.user) {
-                (session.user as any).role = token.role;
-                (session.user as any).address = token.address;
-            }
+            // Standardize session.user for student and institutional roles
+            const userObj = {
+                role: token.role || "STUDENT",
+                address: token.address,
+                name: session.user?.name || `Student (${String(token.address).slice(0,6)})`,
+                email: session.user?.email || null,
+            };
+
+            (session as any).user = userObj;
+            
+            console.log("[AUTH] Final Session Delivered:", { 
+                role: userObj.role, 
+                address: userObj.address,
+                hasUser: !!session.user
+            });
+            
             return session;
         }
     },

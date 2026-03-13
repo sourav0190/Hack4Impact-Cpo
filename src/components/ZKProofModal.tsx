@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from 'react';
-import { generateNativeDisclosure } from '@/lib/nativeVerify';
 import { ShieldCheck, Download, Loader2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@/lib/WalletContext';
 
 interface Asset {
     id: string | number;
+    name?: string;
     creator?: string;
 }
 
@@ -33,7 +33,10 @@ export default function ZKProofModal({ isOpen, onClose, asset }: ZKProofModalPro
         try {
             toast.loading("Generating Native Verification...", { id: "zk-gen" });
             
-            const proofData = await generateNativeDisclosure(accountAddress, Number(asset.id), threshold);
+            const response = await fetch(`/api/zk-proof?address=${accountAddress}&assetId=${asset.id}&threshold=${threshold}`);
+            const proofData = await response.json();
+            
+            if (proofData.error) throw new Error(proofData.error);
             
             const element = document.createElement("a");
             const file = new Blob([JSON.stringify(proofData, null, 2)], {type: 'application/json'});
@@ -65,24 +68,37 @@ export default function ZKProofModal({ isOpen, onClose, asset }: ZKProofModalPro
                     <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center text-gold mb-4">
                         <ShieldCheck size={32} />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Generate Native Proof</h2>
+                    <h2 className="text-2xl font-bold text-white">{asset.name?.includes("Badge") ? "Skill Verification" : "Generate Native Proof"}</h2>
                     <p className="text-gray-400 mt-2 text-sm italic">
-                        Prove your CGPA is above a threshold natively on Algorand.
+                        {asset.name?.includes("Badge") 
+                            ? "Verify your skill level is above a benchmark natively on Algorand."
+                            : "Prove your CGPA is above a threshold natively on Algorand."}
                     </p>
                 </div>
 
                 <div className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gold/80">Select Threshold to Prove</label>
+                        <label className="text-sm font-medium text-gold/80">Select {asset.name?.includes("Badge") ? "Proficiency Benchmark" : "Threshold to Prove"}</label>
                         <select 
                             value={threshold}
                             onChange={(e) => setThreshold(parseFloat(e.target.value))}
                             className="w-full bg-black border border-gold/10 p-3 rounded-xl focus:border-gold outline-none transition-all text-white"
                         >
-                            <option value="6.0">CGPA ≥ 6.0</option>
-                            <option value="7.0">CGPA ≥ 7.0</option>
-                            <option value="8.0">CGPA ≥ 8.0</option>
-                            <option value="9.0">CGPA ≥ 9.0</option>
+                            {asset.name?.includes("Badge") ? (
+                                <>
+                                    <option value="1.0">Beginner (Level 1)</option>
+                                    <option value="2.0">Intermediate (Level 2)</option>
+                                    <option value="3.0">Advanced (Level 3)</option>
+                                    <option value="4.0">Expert (Level 4)</option>
+                                </>
+                            ) : (
+                                <>
+                                    <option value="6.0">CGPA ≥ 6.0</option>
+                                    <option value="7.0">CGPA ≥ 7.0</option>
+                                    <option value="8.0">CGPA ≥ 8.0</option>
+                                    <option value="9.0">CGPA ≥ 9.0</option>
+                                </>
+                            )}
                         </select>
                     </div>
 

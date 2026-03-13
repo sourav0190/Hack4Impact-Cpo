@@ -1,16 +1,19 @@
 "use client";
 import React, { useState, useEffect, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
-import { fetchUserAssets, fetchAssetDetails, optInAsset, cleanAddress, algodClient, waitForConfirmation } from '@/lib/algorand';
+import { cleanAddress } from '@/lib/algorand';
 import { ShieldCheck, Loader2, Search, PlusCircle, CheckCircle, Copy, Code, Github, X, QrCode, Download, ExternalLink, RefreshCw, Wallet, Info, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import ZKProofModal from '@/components/ZKProofModal';
-import CertificateCard from '@/components/CertificateCard';
-import BlindHireCard from '@/components/BlindHireCard';
+import dynamic from 'next/dynamic';
+
+const ZKProofModal = dynamic(() => import('@/components/ZKProofModal'), { ssr: false });
+const CertificateCard = dynamic(() => import('@/components/CertificateCard'), { ssr: false });
+const BlindHireCard = dynamic(() => import('@/components/BlindHireCard'), { ssr: false });
 
 interface Asset {
     id: string;
@@ -21,7 +24,8 @@ interface Asset {
 }
 
 export default function DashboardPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    const router = useRouter();
     const { accountAddress, connect, deflyWallet } = useWallet() as any;
     const [assets, setAssets] = useState<Asset[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -34,40 +38,33 @@ export default function DashboardPage() {
     const [claimAssetId, setClaimAssetId] = useState<string>('');
     const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
+    const loadAssets = React.useCallback(async () => {
+        if (!accountAddress) return;
+        setIsLoading(true);
+        try {
+            console.log(`[VAULT] Requesting assets for: ${accountAddress}`);
+            const response = await fetch(`/api/assets?address=${accountAddress}`);
+            const data = await response.json();
+            
+            if (data.error) throw new Error(data.error);
+            
+            console.log(`[VAULT] Received ${data.assets?.length || 0} education assets from API`);
+            setAssets(data.assets || []);
+        } catch (error: any) {
+            console.error("Dashboard Load Error:", error);
+            toast.error("Failed to load Vault assets");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [accountAddress]);
+
     useEffect(() => {
         if (accountAddress) {
             loadAssets();
         } else {
             setAssets([]);
         }
-    }, [accountAddress]);
-
-    const loadAssets = async () => {
-        setIsLoading(true);
-        try {
-            const userAssets = await fetchUserAssets(accountAddress);
-            const degreeAssets: Asset[] = [];
-            for (const asset of userAssets) {
-                const details = await fetchAssetDetails(asset.assetId);
-                // Check if the asset has a name and it includes "Degree"
-                if (details && details.params && details.params.name && details.params.name.includes("Degree")) {
-                    degreeAssets.push({
-                        id: asset.assetId.toString(),
-                        amount: asset.amount,
-                        name: details.params.name,
-                        url: details.params.url,
-                        creator: details.params.creator
-                    });
-                }
-            }
-            setAssets(degreeAssets);
-        } catch (error) {
-            console.error("Error loading assets:", error);
-            toast.error("Failed to load degrees");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    }, [accountAddress, loadAssets]);
 
     const handleOpenProofModal = (asset: Asset) => {
         setSelectedAsset(asset);
@@ -110,54 +107,115 @@ export default function DashboardPage() {
 
     const handleClaim = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!claimAssetId) return;
+        if (!claimAssetId || !accountAddress) return;
 
         setIsClaiming(true);
         try {
-            toast.loading("Initiating Opt-in...", { id: "claim" });
-            const sAddr = cleanAddress(accountAddress);
+            toast.loading("Preparing Cryptographic Opt-in...", { id: "claim" });
             
-            // balance check
-            const accountInfo = await algodClient.accountInformation(sAddr).do();
-            if (accountInfo.amount < 1000) {
-                throw new Error("Insufficient Testnet ALGO. Please fund your wallet at: https://bank.testnet.algorand.network/");
-            }
+            // 1. Get Unsigned Txn from API
+            const response = await fetch('/api/assets/opt-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    address: accountAddress,
+                    assetId: claimAssetId
+                })
+            });
+            const { txn: encodedTxn, error } = await response.json();
+            if (error) throw new Error(error);
 
-            const txn = await optInAsset(sAddr, Number(claimAssetId));
-
-            toast.loading("Sign Opt-in Transaction...", { id: "claim" });
-            const singleTxnGroups = [{ txn: txn, signers: [sAddr] }];
-            const signedTxn = await deflyWallet.signTransaction([singleTxnGroups]);
+            toast.loading("Awaiting Wallet Signature...", { id: "claim" });
             
-            toast.loading("Broadcasting...", { id: "claim" });
-            const { txid } = await algodClient.sendRawTransaction(signedTxn).do();
+            // 2. Convert base64 to Uint8Array for Defly
+            const txnBytes = new Uint8Array(atob(encodedTxn).split("").map(c => c.charCodeAt(0)));
             
-            toast.loading("Confirming...", { id: "claim" });
-            await waitForConfirmation(algodClient, txid, 4);
+            // 3. Sign using Defly (WalletContext provides deflyWallet)
+            const singleTxnGroups = [{ txn: txnBytes, signers: [accountAddress] }];
+            const signedResult = await (deflyWallet as any).signTransaction([singleTxnGroups]) as Uint8Array[];
+            const signedTxn = signedResult[0];
+            
+            toast.loading("Verifying on Algorand...", { id: "claim" });
+            
+            // 4. Send signed txn to API
+            // Convert Uint8Array to base64 string safely in browser
+            const base64SignedTxn = btoa(
+                Array.from(signedTxn)
+                    .map(byte => String.fromCharCode(byte))
+                    .join("")
+            );
 
-            toast.success("Successfully Opted-in! Waiting for University Transfer...", { id: "claim", duration: 8000 });
+            const sendResult = await fetch('/api/assets/broadcast', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ signedTxn: base64SignedTxn })
+            });
+            const { txid, error: sendError } = await sendResult.json();
+            if (sendError) throw new Error(sendError);
+
+            toast.success("Opt-in Confirmed! Asset Syncing...", { id: "claim", duration: 8000 });
             setClaimAssetId('');
-            // Reload assets to show the new one with 0 balance
-            loadAssets();
+            setTimeout(loadAssets, 3000);
         } catch (error: any) {
-            console.error(error);
-            toast.error("Opt-in failed: " + (error?.message || "Ensure you are connected"), { id: "claim" });
+            console.error("Claim Error:", error);
+            toast.error("Opt-in Failed: " + error.message, { id: "claim" });
         } finally {
             setIsClaiming(false);
         }
     };
 
+    const [isHydrated, setIsHydrated] = useState(false);
+    useEffect(() => {
+        setIsHydrated(true);
+    }, []);
+
     // RBAC Check
     const user = session?.user as any;
-    if (user?.role !== "STUDENT") {
+
+    if (!isHydrated || status === "loading") {
         return (
-            <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
-                <Search size={64} className="text-red-500 mb-6 animate-pulse" />
-                <h1 className="text-3xl font-bold text-white mb-2">Access Denied</h1>
-                <p className="text-gray-400 max-w-md">The student vault is only accessible to verified students with a linked wallet.</p>
-                <Link href="/login" className="mt-8 bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all">
-                    Go to Login
-                </Link>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="animate-spin text-gold" size={48} />
+                    <p className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.3em] animate-pulse">Syncing Vault Intelligence...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (status === "unauthenticated") {
+        console.warn("[DASHBOARD] Access Denied - No Session Found. Redirecting to Login.");
+        router.push("/login");
+        return null;
+    }
+
+    if (user?.role !== "STUDENT") {
+        console.error("[DASHBOARD] Role Mismatch. Found:", user?.role);
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-background">
+                <div className="glass p-12 rounded-[3.5rem] border-red-500/20 max-w-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-red-500/20" />
+                    <ShieldCheck size={64} className="text-red-500 mb-8 mx-auto opacity-50" />
+                    <h1 className="text-4xl font-black text-white mb-6 uppercase tracking-tighter italic">Access <span className="text-red-500 underline decoration-red-500/30">Denied</span></h1>
+                    
+                    <div className="bg-white/5 py-4 px-6 rounded-2xl mb-10 border border-white/5 inline-flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <p className="text-gray-400 text-[10px] font-mono uppercase tracking-widest">Identity Trace: <span className="text-white font-bold">{user?.role || "GUEST"}</span></p>
+                    </div>
+
+                    <p className="text-gray-400 mb-12 leading-relaxed font-medium text-sm">
+                        This decentralized node requires a verified <span className="text-white font-bold tracking-widest uppercase text-[10px] bg-white/5 px-2 py-1 rounded">Student_Credential</span>. Your current identity layer is authorized for external portal access only.
+                    </p>
+
+                    <button 
+                        onClick={() => {
+                            window.location.href = "/login";
+                        }} 
+                        className="w-full bg-gold hover:bg-gold-dark text-black font-black px-10 py-5 rounded-[2rem] transition-all shadow-gold-glow uppercase tracking-widest text-xs flex items-center justify-center gap-3"
+                    >
+                        <RefreshCw size={18} /> Switch to Student Wallet
+                    </button>
+                </div>
             </div>
         );
     }

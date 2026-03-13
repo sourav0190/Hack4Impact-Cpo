@@ -15,14 +15,15 @@ import {
     Search,
     ShieldCheck,
     Menu,
-    X
+    X,
+    Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const { disconnect } = useWallet() as any;
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -101,7 +102,12 @@ export default function Navbar() {
                 {/* Right Side Actions */}
                 <div className="flex items-center gap-4">
                     <AnimatePresence mode="wait">
-                        {session ? (
+                        {status === "loading" ? (
+                            <div className="flex items-center gap-2 px-6 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50">
+                                <Loader2 size={16} className="animate-spin text-gold" />
+                                <span className="text-[10px] uppercase font-black text-gray-500 tracking-widest">Identifying...</span>
+                            </div>
+                        ) : session ? (
                             <motion.div 
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
