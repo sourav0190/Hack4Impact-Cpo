@@ -20,11 +20,11 @@ veridegree/
 ## 🌟 Key Features
 
 - **Cyber-Gold Premium UI:** A stunning, multi-million dollar aesthetic featuring glassmorphism, deep dark/gold gradients, and smooth micro-interactions powered by Framer Motion.
+- **AI-Powered Behavioral Proctoring:** High-fidelity, real-time security monitoring that detects multiple people, electronic devices, and gaze direction during assessments via cloud computer vision.
+- **Recruitment Trust Marketplace:** A merit-based talent ecosystem where students monetize their verified skills. Recruiters pay 1 ALGO to unlock talent contact details, with 70% going to the student.
 - **Immutable Credentials (SBTs):** Degrees are minted as Algorand Standard Assets (ASAs) with the `defaultFrozen` flag set to true, making them non-transferable "Soulbound" tokens tied permanently to the student's wallet.
 - **BlindHire AI:** Integrated Google Gemini API to automatically sanitize uploaded resumes, stripping Personally Identifiable Information (PII) to ensure 100% bias-free recruitment based purely on extracted skills and experience.
-- **Decentralized Storage:** Sensitive degree details (including Enrollment IDs) are converted to JSON metadata and pinned to IPFS (via Pinata) ensuring permanent, immutable storage.
 - **Privacy-Preserving Verification (ZK-Proofs):** Students generate cryptographic proofs (using Circom & SnarkJS) via WebAssembly to prove their CGPA crosses a specific threshold without exposing the actual number to recruiters.
-- **Talent-Fi Micro-Economy:** Recruiters pay a 5 ALGO "Talent Bounty" via Algorand Atomic Transfers (grouped transactions) to unlock a verified candidate's direct contact details, splitting the reward between the candidate and the university.
 
 ## 🛠️ Technology Stack
 

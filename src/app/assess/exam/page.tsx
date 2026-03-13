@@ -3,11 +3,11 @@ import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SKILL_CATEGORIES, Question } from '@/lib/questions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ShieldAlert, Camera, Maximize2, AlertTriangle, CheckCircle2, XCircle, Send, Timer, HelpCircle, ShieldCheck, GraduationCap } from 'lucide-react';
+import { Loader2, ShieldAlert, Camera, Maximize2, AlertTriangle, CheckCircle2, XCircle, Send, Timer, HelpCircle, ShieldCheck, GraduationCap, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// MediaPipe imports
-import { ObjectDetector, FilesetResolver } from '@mediapipe/tasks-vision';
+// External AI Proctoring URL
+const PROCTOR_API_URL = "https://aiprotctor-production.up.railway.app/api/v1/analyze";
 
 function ExamContent() {
     const searchParams = useSearchParams();
@@ -28,21 +28,35 @@ function ExamContent() {
     const [warnings, setWarnings] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [faceCount, setFaceCount] = useState(0);
-    const [isModelLoading, setIsModelLoading] = useState(true);
+    const [suspicionScore, setSuspicionScore] = useState(0);
+    const [isTalking, setIsTalking] = useState(false);
+    const [isModelLoading, setIsModelLoading] = useState(false);
     const [isCameraActive, setIsCameraActive] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
     
     // Refs
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
-    const modelRef = useRef<ObjectDetector | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const analysisIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const warningCooldown = useRef(0);
 
     // Warning System
+    const calculateScore = useCallback(() => {
+        let correctCount = 0;
+        questions.forEach(q => {
+            if (userAnswers[q.id] === q.correctAnswer) {
+                correctCount++;
+            }
+        });
+        return Math.round((correctCount / questions.length) * 100);
+    }, [questions, userAnswers]);
+
     const forceSubmit = useCallback(() => {
-        toast.error("TEST TERMINATED: Multiple security violations detected.", { duration: 10000 });
-        // In a real app, we'd submit current data to DB here
-        router.push('/assess/result?status=terminated');
-    }, [router]);
+        const finalScore = calculateScore();
+        toast.error("Proctoring Protocol Violated. Session terminated.");
+        router.push(`/assess/result?status=terminated&skill=${skillId}&score=${finalScore}&difficulty=${difficulty}`);
+    }, [calculateScore, router, skillId, difficulty]);
 
     const issueWarning = useCallback((msg: string) => {
         const now = Date.now();
@@ -72,28 +86,6 @@ function ExamContent() {
             router.push('/assess');
         }
 
-        const loadModel = async () => {
-            try {
-                const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-                );
-                modelRef.current = await ObjectDetector.createFromOptions(vision, {
-                    baseOptions: {
-                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`,
-                        delegate: "GPU"
-                    },
-                    scoreThreshold: 0.5,
-                    runningMode: "VIDEO"
-                });
-                console.log("[AI] MediaPipe Model Created Successfully");
-                setIsModelLoading(false);
-            } catch (err) {
-                console.error("MediaPipe Load Error:", err);
-                toast.error("Failed to initialize AI Proctoring engine");
-            }
-        };
-        loadModel();
-
         // Anti-Tab Switch
         const handleVisibilityChange = () => {
             if (document.hidden && isStarted) {
@@ -114,32 +106,18 @@ function ExamContent() {
         };
     }, [skillId, difficulty, isStarted, issueWarning, router, setQuestions]);
 
-    // Dedicated Camera Stream Cleanup (ONLY on Unmount)
-    useEffect(() => {
-        return () => {
-            if (streamRef.current) {
-                console.log("[CAMERA] Component unmounting. Stopping all tracks:", streamRef.current.id);
-                streamRef.current.getTracks().forEach(track => {
-                    console.log(`[CAMERA] Stopping track: ${track.kind} (${track.label})`);
-                    track.stop();
-                });
-            }
-        };
-    }, []);
 
     // Handle video attachment when it mounts
     const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
         console.log("[CAMERA] videoRefCallback called with node:", node ? "HTMLVideoElement" : "null");
         if (node !== null) {
-            // Save to ref for detection loop
             (videoRef as any).current = node;
             
-            // Attach stream if it exists
             if (streamRef.current) {
+                setIsCameraActive(true);
                 if (!node.srcObject) {
                     console.log("[CAMERA] Attaching existing stream to video node");
                     node.srcObject = streamRef.current;
-                    setIsCameraActive(true);
                     node.play().catch(e => console.error("[CAMERA] Play error:", e));
                 } else {
                     console.log("[CAMERA] Video node already has a srcObject");
@@ -152,63 +130,160 @@ function ExamContent() {
 
 
 
-    // Camera & Detection Loop
-    useEffect(() => {
-        let animationFrame: number;
+    // Base64 Frame Capture Utility
+    const captureFrame = useCallback(() => {
+        if (!videoRef.current || videoRef.current.readyState !== 4) return null;
         
-        const detect = async () => {
-            if (modelRef.current && videoRef.current && videoRef.current.readyState === 4 && isStarted) {
-                try {
-                    const result = modelRef.current.detectForVideo(videoRef.current, performance.now());
-                    const persons = result.detections.filter(d => 
-                        d.categories.some(c => c.categoryName === 'person' && c.score > 0.4)
-                    );
-                    
-                    if (persons.length > 0) {
-                        // console.log(`[AI] ${persons.length} person(s) detected`);
-                    }
-
-                    setFaceCount(persons.length);
-
-                    if (persons.length > 1) {
-                        issueWarning("Multiple People Detected in Frame!");
-                    }
-                } catch (err) {
-                    console.error("[AI] Detection Error:", err);
-                }
-            }
-            animationFrame = requestAnimationFrame(detect);
-        };
-
-        if (isStarted && !isModelLoading) {
-            console.log("[AI PROCTOR] Detection Loop Started");
-            detect();
+        if (!canvasRef.current) {
+            canvasRef.current = document.createElement('canvas');
         }
-        return () => cancelAnimationFrame(animationFrame);
-    }, [isStarted, isModelLoading, issueWarning]);
+        
+        const canvas = canvasRef.current;
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        
+        // Draw video frame to canvas
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to base64 (jpeg for smaller payload) - Use 0.8 quality like in user's example
+        return canvas.toDataURL('image/jpeg', 0.8);
+    }, []);
+
+    const analyzeFrame = useCallback(async () => {
+        // Use refs as source of truth for hardware state
+        const hasStream = streamRef.current && streamRef.current.active;
+        const hasVideo = videoRef.current && videoRef.current.readyState === 4;
+
+        if (!hasStream || !hasVideo) {
+            console.log("[DEBUG] Skipping loop tick. Stream active:", !!hasStream, "Video ready:", !!hasVideo);
+            // Re-sync UI state if it dropped
+            if (hasStream && !isCameraActive) setIsCameraActive(true);
+            return;
+        }
+        
+        const frameData = captureFrame();
+        if (!frameData) {
+            console.log("[DEBUG] Skipping loop tick: Capture failed");
+            return;
+        }
+
+        try {
+            const response = await fetch(PROCTOR_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: frameData }) // Send full data URI
+            });
+
+            if (!response.ok) throw new Error(`Proctoring API Error: ${response.status}`);
+
+            const result = await response.json();
+            console.log("[CLOUD AI] Analysis Result:", result);
+            
+            // Map the result based on actual API response structure provided by user
+            const detectedPersons = result.person_count ?? 0;
+            const currentSuspicion = result.suspicion_score ?? 0;
+            
+            setFaceCount(detectedPersons);
+            setSuspicionScore(currentSuspicion);
+            setIsTalking(result.is_talking || false);
+
+            if (detectedPersons > 1 || result.multiple_people === true) {
+                issueWarning("Multiple People Detected!");
+            } else if (result.face_present === false) {
+                issueWarning("No Face Detected!");
+            }
+
+            if (result.phone_detected === true) {
+                issueWarning("Electronic Device Detected!");
+            }
+
+            if (result.book_detected === true) {
+                issueWarning("Prohibited Material Detected!");
+            }
+
+            if (result.looking_away === true) {
+                issueWarning("Eyes off screen detected!");
+            }
+
+            if (result.malpractices && result.malpractices.length > 0) {
+                // Priority to specific malpractices from the list
+                issueWarning(result.malpractices[0]);
+            }
+
+            if (currentSuspicion > 80) {
+                issueWarning("High Security Risk: Termination Imminent");
+            }
+
+        } catch (err) {
+            console.error("[CLOUD AI] Analysis Failure:", err);
+        }
+    }, [captureFrame, issueWarning]);
+
+    const stopCamera = useCallback(() => {
+        if (streamRef.current) {
+            console.log("[CAMERA] Stopping all tracks...");
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        setIsCameraActive(false);
+    }, []);
 
     const startCamera = async () => {
+        setCameraError(null);
         try {
+            stopCamera();
             console.log("[CAMERA] Requesting user media...");
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 320, height: 240 } 
+                video: { width: 640, height: 480 } 
             });
-            console.log("[CAMERA] Stream obtained:", stream.id, "Active Tracks:", stream.getVideoTracks().length);
+            console.log("[CAMERA] Stream obtained:", stream.id);
             streamRef.current = stream;
             
-            // Note: videoRef.current might be null at this point due to conditional rendering
             if (videoRef.current) {
-                console.log("[CAMERA] Attaching stream to existing video ref");
                 videoRef.current.srcObject = stream;
                 setIsCameraActive(true);
-            } else {
-                console.log("[CAMERA] Video element not yet mounted, will attach via callback");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("[CAMERA] getUserMedia Error:", err);
-            toast.error("Camera access required for proctored exam. Please check permissions.");
+            const errorMsg = err.name === 'NotReadableError' 
+                ? "Camera is already in use. Please close other tabs/apps." 
+                : "Camera access denied.";
+            setCameraError(errorMsg);
+            toast.error(errorMsg);
         }
     };
+
+    // Corrected Analysis Loop: MUST NOT stop camera on interval cleanup
+    useEffect(() => {
+        if (isStarted) {
+            console.log("[CLOUD AI] Loop Started (1500ms)");
+            analysisIntervalRef.current = setInterval(() => {
+                analyzeFrame();
+            }, 1500);
+        }
+        
+        return () => {
+            if (analysisIntervalRef.current) {
+                console.log("[CLOUD AI] Loop Cleared (Interval Only)");
+                clearInterval(analysisIntervalRef.current);
+                analysisIntervalRef.current = null;
+            }
+        };
+    }, [isStarted, analyzeFrame]);
+
+    // Dedicated Camera Lifecycle Cleanup
+    useEffect(() => {
+        return () => {
+            console.log("[LIFECYCLE] Component unmounting, cleaning up camera...");
+            if (analysisIntervalRef.current) clearInterval(analysisIntervalRef.current);
+            // This is the ONLY place where we kill the hardware tracks on unmount
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, []);
 
     const startExam = async () => {
         try {
@@ -260,17 +335,9 @@ function ExamContent() {
     };
 
     const handleSubmit = () => {
-        // Calculate score
-        let correctCount = 0;
-        questions.forEach(q => {
-            if (userAnswers[q.id] === q.correctAnswer) {
-                correctCount++;
-            }
-        });
-        const score = Math.round((correctCount / questions.length) * 100);
-
+        const score = calculateScore();
         toast.success("Exam Submitted Successfully!");
-        router.push(`/assess/result?status=success&skill=${skillId}&score=${score}&time=${timeElapsed}`);
+        router.push(`/assess/result?status=success&skill=${skillId}&score=${score}&time=${timeElapsed}&difficulty=${difficulty}`);
     };
 
     if (!isStarted && isCountingDown && countdown > 0 && isFullscreen) {
@@ -456,9 +523,21 @@ function ExamContent() {
 
                     <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-inner">
                         {!isCameraActive && (
-                            <div className="absolute inset-0 flex items-center justify-center flex-col text-gray-600 gap-2">
-                                <Camera size={40} strokeWidth={1.5} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">No Active Stream</span>
+                            <div className="absolute inset-0 flex items-center justify-center flex-col text-gray-600 gap-4 p-4 text-center">
+                                <Camera size={40} strokeWidth={1.5} className={cameraError ? 'text-red-500' : ''} />
+                                <div className="space-y-2">
+                                    <span className="text-[10px] font-black uppercase tracking-widest block">
+                                        {cameraError || "No Active Stream"}
+                                    </span>
+                                    {cameraError && (
+                                        <button 
+                                            onClick={startCamera}
+                                            className="text-[9px] font-black text-gold uppercase tracking-[0.2em] hover:underline flex items-center gap-2 mx-auto"
+                                        >
+                                            <RefreshCw size={10} /> Retry Access
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                         <video 
@@ -466,7 +545,10 @@ function ExamContent() {
                             autoPlay 
                             muted 
                             playsInline 
-                            onPlay={() => setIsCameraActive(true)}
+                            onPlay={() => {
+                                setIsCameraActive(true);
+                                setCameraError(null);
+                            }}
                             className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-1000 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`} 
                         />
                         <div className="absolute top-4 right-4 flex gap-2">
@@ -478,35 +560,48 @@ function ExamContent() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/5">
-                            <div className="flex items-center gap-3">
-                                <Loader2 size={16} className={`text-gold ${isModelLoading ? 'animate-spin' : ''}`} />
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Neural Load</span>
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-xl hover:bg-white/10 transition-all group">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3 text-gray-400 group-hover:text-gold transition-colors">
+                                    <AlertTriangle size={16} />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Suspicion Index</span>
+                                </div>
+                                <span className={`text-sm font-black ${suspicionScore > 50 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                    {suspicionScore}%
+                                </span>
                             </div>
-                            <span className="text-xs font-bold text-white uppercase">{isModelLoading ? 'Syncing' : 'Stabilized'}</span>
+                            <div className="h-1 bg-white/10 rounded-full overflow-hidden mt-3">
+                                <motion.div 
+                                    className={`h-full ${suspicionScore > 50 ? 'bg-red-500' : 'bg-gold'}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${suspicionScore}%` }}
+                                />
+                            </div>
                         </div>
 
-                        <div className={`flex justify-between items-center p-5 rounded-2xl border transition-colors ${warnings > 0 ? 'bg-red-500/10 border-red-500/20 shadow-red-glow/20' : 'bg-white/5 border-white/5'}`}>
+                        <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/10">
                             <div className="flex items-center gap-3">
-                                <AlertTriangle size={16} className={warnings > 0 ? 'text-red-500' : 'text-gray-500'} />
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Warnings</span>
-                            </div>
-                            <span className={`text-sm font-black ${warnings > 1 ? 'text-red-500 animate-pulse' : warnings > 0 ? 'text-orange-500' : 'text-white'}`}>{warnings}/3</span>
-                        </div>
-
-                        <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/5">
-                            <div className="flex items-center gap-3">
-                                <ShieldCheck size={16} className="text-green-500" />
+                                <ShieldCheck size={16} className={faceCount === 1 ? "text-emerald-500" : "text-red-500"} />
                                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Face Detection</span>
                             </div>
-                            <span className={`text-sm font-black ${faceCount === 1 ? 'text-green-500' : 'text-red-500'}`}>{faceCount} Detected</span>
+                            <span className={`text-sm font-black ${faceCount === 1 ? 'text-emerald-500' : 'text-red-500'}`}>{faceCount} Detected</span>
+                        </div>
+
+                        <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/10">
+                            <div className="flex items-center gap-3">
+                                <HelpCircle size={16} className={isTalking ? 'text-red-500 animate-pulse' : 'text-gray-500'} />
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Speech Status</span>
+                            </div>
+                            <span className={`text-sm font-black ${isTalking ? 'text-red-500' : 'text-gray-400'}`}>
+                                {isTalking ? 'TALKING' : 'SILENT'}
+                            </span>
                         </div>
                     </div>
 
                     <div className="p-6 bg-gold/5 rounded-3xl border border-gold/10">
-                        <h5 className="text-[10px] font-black text-gold uppercase tracking-widest mb-3">System Note</h5>
+                        <h5 className="text-[10px] font-black text-gold uppercase tracking-widest mb-3">Cloud AI Integrity</h5>
                         <p className="text-[9px] text-gray-400 font-medium leading-relaxed italic uppercase">
-                            &quot;Assessment integrity verified via on-device inference. Data never leaves your machine. Full anonymity maintained while preventing collusion.&quot;
+                            &quot;Assessment integrity verified via high-performance cloud computer vision. Real-time behavior analysis ensures a fair competition environment.&quot;
                         </p>
                     </div>
                 </div>
