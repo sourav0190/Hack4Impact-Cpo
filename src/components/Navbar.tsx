@@ -16,7 +16,8 @@ import {
     ShieldCheck,
     Menu,
     X,
-    Loader2
+    Loader2,
+    Briefcase
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -24,7 +25,7 @@ export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { data: session, status } = useSession();
-    const { disconnect } = useWallet() as any;
+    const { accountAddress, disconnect } = useWallet() as any;
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -53,8 +54,8 @@ export default function Navbar() {
     }, [pathname]);
 
     return (
-        <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 px-6 py-4 ${isScrolled ? 'pt-4' : 'pt-6'}`}>
-            <div className={`max-w-7xl mx-auto glass rounded-[2rem] px-8 h-16 flex justify-between items-center transition-all duration-500 ${isScrolled ? 'shadow-gold-glow border-gold/20 bg-black/60' : 'border-white/5'}`}>
+        <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 px-6 py-2 ${isScrolled ? 'pt-2' : 'pt-4'}`}>
+            <div className={`max-w-7xl mx-auto glass rounded-[2rem] px-8 h-16 flex justify-between items-center transition-all duration-500 ${isScrolled ? 'shadow-gold-glow border-gold/20 bg-black/80 backdrop-blur-2xl' : 'border-white/5 bg-black/40 backdrop-blur-xl'}`}>
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center border border-gold/20 group-hover:border-gold transition-all duration-500 shadow-gold-glow">
@@ -81,8 +82,23 @@ export default function Navbar() {
                         </Link>
                     )}
 
+                    {(session?.user as any)?.role === "EMPLOYER" && (
+                        <Link 
+                            href="/recruit/dashboard"
+                            className={`text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${isActive('/recruit/dashboard') ? 'text-gold' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <Briefcase size={14} /> Recruit
+                        </Link>
+                    )}
+
                     {(session?.user as any)?.role === "STUDENT" && (
                         <>
+                            <Link 
+                                href="/jobs"
+                                className={`text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${isActive('/jobs') ? 'text-gold' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                <Briefcase size={14} /> Jobs
+                            </Link>
                             <Link 
                                 href="/dashboard"
                                 className={`text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${isActive('/dashboard') ? 'text-gold' : 'text-gray-400 hover:text-white'}`}
@@ -115,9 +131,14 @@ export default function Navbar() {
                                 className="flex items-center gap-4"
                             >
                                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl ring-1 ring-white/5">
-                                    <div className={`w-2 h-2 rounded-full animate-pulse ${(session.user as any)?.role === "UNIVERSITY" ? 'bg-blue-400' : 'bg-gold'}`} />
                                     <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest max-w-[100px] truncate">
-                                        {(session.user as any)?.role === "UNIVERSITY" ? "Institution" : ((session.user as any)?.address?.slice(0, 4) + "..." + (session.user as any)?.address?.slice(-4))}
+                                        {(session.user as any)?.role === "UNIVERSITY" 
+                                            ? "Institution" 
+                                            : (session.user as any)?.address 
+                                                ? `${(session.user as any).address.slice(0, 4)}...${(session.user as any).address.slice(-4)}`
+                                                : accountAddress
+                                                    ? `${accountAddress.slice(0, 4)}...${accountAddress.slice(-4)}`
+                                                    : "Connected"}
                                     </span>
                                 </div>
 
@@ -217,9 +238,14 @@ export default function Navbar() {
                             {session ? (
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-2 h-2 rounded-full animate-pulse ${(session.user as any)?.role === "UNIVERSITY" ? 'bg-blue-400' : 'bg-gold'}`} />
                                         <span className="text-xs font-mono text-gray-400 uppercase tracking-widest">
-                                            {(session.user as any)?.role === "UNIVERSITY" ? "Institution" : ((session.user as any)?.address?.slice(0, 4) + "..." + (session.user as any)?.address?.slice(-4))}
+                                            {(session.user as any)?.role === "UNIVERSITY" 
+                                                ? "Institution" 
+                                                : (session.user as any)?.address 
+                                                    ? `${(session.user as any).address.slice(0, 4)}...${(session.user as any).address.slice(-4)}`
+                                                    : accountAddress
+                                                        ? `${accountAddress.slice(0, 4)}...${accountAddress.slice(-4)}`
+                                                        : "Connected"}
                                         </span>
                                     </div>
                                     <button 

@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
 import { cleanAddress } from '@/lib/algorand';
-import { ShieldCheck, Loader2, Search, PlusCircle, CheckCircle, Copy, Code, Github, X, QrCode, Download, ExternalLink, RefreshCw, Wallet, Info, GraduationCap } from 'lucide-react';
+import { ShieldCheck, Loader2, Search, PlusCircle, CheckCircle, Copy, Code, Github, X, QrCode, Download, ExternalLink, RefreshCw, Wallet, Info, GraduationCap, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
@@ -38,6 +38,11 @@ export default function DashboardPage() {
     const [claimAssetId, setClaimAssetId] = useState<string>('');
     const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
+    // Profile Setup State
+    const [showProfileSetup, setShowProfileSetup] = useState(false);
+    const [profileData, setProfileData] = useState({ name: '', email: '', phone: '' });
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+
     const loadAssets = React.useCallback(async () => {
         if (!accountAddress) return;
         setIsLoading(true);
@@ -61,10 +66,51 @@ export default function DashboardPage() {
     useEffect(() => {
         if (accountAddress) {
             loadAssets();
+            checkProfile();
         } else {
             setAssets([]);
         }
     }, [accountAddress, loadAssets]);
+
+    const checkProfile = async () => {
+        try {
+            const res = await fetch('/api/student/profile');
+            const data = await res.json();
+            if (data.needsSetup) {
+                setShowProfileSetup(true);
+            } else {
+                setProfileData({
+                    name: data.name || '',
+                    email: data.email || '',
+                    phone: data.phone || ''
+                });
+            }
+        } catch (err) {
+            console.error("Profile check failed");
+        }
+    };
+
+    const handleSaveProfile = async (e: FormEvent) => {
+        e.preventDefault();
+        setIsSavingProfile(true);
+        try {
+            const res = await fetch('/api/student/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(profileData)
+            });
+            if (res.ok) {
+                toast.success("Professional Profile Synchronized");
+                setShowProfileSetup(false);
+            } else {
+                throw new Error("Sync failed");
+            }
+        } catch (err) {
+            toast.error("Profile Synchronization Failed");
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
 
     const handleOpenProofModal = (asset: Asset) => {
         setSelectedAsset(asset);
@@ -223,12 +269,12 @@ export default function DashboardPage() {
     const isAddressMismatch = user?.address && accountAddress && user.address !== accountAddress;
 
     return (
-        <main className="min-h-screen bg-background p-4 lg:p-12 relative overflow-hidden">
+        <main className="min-h-screen bg-background p-4 md:p-8 lg:p-12 relative overflow-hidden pt-40 md:pt-48">
             {/* Background Glows */}
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gold/5 blur-[100px] rounded-full -z-10" />
 
-            <div className="max-w-7xl mx-auto pt-24">
+            <div className="max-w-7xl mx-auto mt-10">
                 <header className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <motion.div 
                         initial={{ opacity: 0, x: -30 }}
@@ -453,6 +499,73 @@ export default function DashboardPage() {
                             </div>
 
                         </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Profile Setup Modal */}
+                <AnimatePresence>
+                    {showProfileSetup && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-2xl p-4">
+                            <motion.div 
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="glass border-gold/30 w-full max-w-lg rounded-[3.5rem] p-12 text-center relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gold/30" />
+                                
+                                <div className="w-20 h-20 bg-gold/10 rounded-3xl flex items-center justify-center text-gold mx-auto mb-8 border border-gold/20 shadow-gold-glow">
+                                    <Briefcase size={40} />
+                                </div>
+
+                                <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 italic">
+                                    Identity <span className="gold-text-gradient">Bridge</span>.
+                                </h2>
+                                <p className="text-gray-400 mb-10 text-xs font-medium uppercase tracking-widest">
+                                    Complete your professional metadata to enable recruiter discovery.
+                                </p>
+
+                                <form onSubmit={handleSaveProfile} className="space-y-4">
+                                    <div className="relative">
+                                        <PlusCircle className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
+                                        <input 
+                                            type="text" required
+                                            value={profileData.name}
+                                            onChange={e => setProfileData({...profileData, name: e.target.value})}
+                                            placeholder="Professional Full Name"
+                                            className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white"
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
+                                        <input 
+                                            type="email" required
+                                            value={profileData.email}
+                                            onChange={e => setProfileData({...profileData, email: e.target.value})}
+                                            placeholder="Professional Email (for recruiters)"
+                                            className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white"
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
+                                        <input 
+                                            type="tel" required
+                                            value={profileData.phone}
+                                            onChange={e => setProfileData({...profileData, phone: e.target.value})}
+                                            placeholder="Contact Number"
+                                            className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white"
+                                        />
+                                    </div>
+
+                                    <button 
+                                        type="submit"
+                                        disabled={isSavingProfile}
+                                        className="w-full bg-gold hover:bg-gold-dark text-black font-black py-5 rounded-2xl transition-all shadow-gold-glow uppercase tracking-widest text-xs flex items-center justify-center gap-3 mt-4"
+                                    >
+                                        {isSavingProfile ? <Loader2 className="animate-spin" /> : "Synthesize Profile Identity"}
+                                    </button>
+                                </form>
+                            </motion.div>
+                        </div>
                     )}
                 </AnimatePresence>
 

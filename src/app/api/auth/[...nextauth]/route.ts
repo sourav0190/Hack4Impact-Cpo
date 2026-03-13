@@ -6,6 +6,9 @@ const UNIVERSITY_DOMAINS = [".edu", ".ac.in"];
 const UNIVERSITY_WHITELIST = ["admin@university.edu"];
 const EMPLOYER_DOMAINS = [".corp", ".com", ".org"];
 
+// Demo: Addresses that are authorized recruiters
+const EMPLOYER_WHITELIST = ["Y6L3YTWYFQ3OS7VJMFWCYPR7H6BKVD33YGBP6OMRL2KQ5LA7IBSSXJDW7Y"];
+
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -25,7 +28,6 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Invalid employer domain.");
                 }
 
-                // Demo password logic
                 if (credentials.password !== "employer123") {
                     throw new Error("Invalid employer credentials.");
                 }
@@ -46,11 +48,7 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                console.log("Auth Attempt:", credentials?.email);
-                if (!credentials?.email || !credentials?.password) {
-                    console.log("Missing credentials");
-                    return null;
-                }
+                if (!credentials?.email || !credentials?.password) return null;
 
                 const email = credentials.email.toLowerCase();
                 const isWhitelisted = UNIVERSITY_WHITELIST.includes(email);
@@ -60,12 +58,11 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Only recognized university domains (.edu, .ac.in) are allowed.");
                 }
 
-                // In a real app, verify password against DB. Hardcoded for demo:
                 const pwd = credentials.password.trim();
                 if (pwd !== "admin123") {
                     throw new Error("Invalid institutional credentials.");
                 }
-                console.log("Auth Success:", email);
+
                 return {
                     id: email,
                     email: email,
@@ -75,20 +72,20 @@ export const authOptions: NextAuthOptions = {
             }
         }),
         CredentialsProvider({
-            id: "student-algorand",
-            name: "Student Algorand",
+            id: "algorand-auth",
+            name: "Algorand Wallet",
             credentials: {
                 address: { label: "Address", type: "text" },
                 signature: { label: "Signature", type: "text" },
-                nonce: { label: "Nonce", type: "text" }
+                nonce: { label: "Nonce", type: "text" },
+                requestedRole: { label: "Role", type: "text" }
             },
             async authorize(credentials) {
                 if (!credentials?.address || !credentials?.signature || !credentials?.nonce) return null;
 
                 try {
-                    const { address, signature, nonce } = credentials;
+                    const { address, signature, nonce, requestedRole } = credentials;
                     
-                    // For demo/testing, allow a placeholder signature
                     const isDemo = signature === "demo_sig_verified_by_backend";
                     let isValid = false;
 
@@ -101,10 +98,17 @@ export const authOptions: NextAuthOptions = {
                     }
 
                     if (isValid) {
+                        // Check if the address is an authorized recruiter
+                        const isWhitelistedEmployer = EMPLOYER_WHITELIST.includes(address);
+                        
+                        // If they specifically ask for EMPLOYER role and are whitelisted, grant it.
+                        // Otherwise, default to STUDENT.
+                        const finalRole = (requestedRole === "EMPLOYER" && isWhitelistedEmployer) ? "EMPLOYER" : "STUDENT";
+
                         return {
                             id: address,
-                            name: `Student (${address.slice(0, 6)}...)`,
-                            role: "STUDENT",
+                            name: `${finalRole} (${address.slice(0, 6)}...)`,
+                            role: finalRole,
                             address: address
                         } as any;
                     }
@@ -116,31 +120,22 @@ export const authOptions: NextAuthOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, user, account }) {
+        async jwt({ token, user }) {
             if (user) {
                 token.role = (user as any).role?.toUpperCase() || "STUDENT";
                 token.address = (user as any).address;
-                console.log("[AUTH] JWT Callback - Setting token:", { role: token.role, address: token.address });
             }
             return token;
         },
         async session({ session, token }) {
-            // Standardize session.user for student and institutional roles
             const userObj = {
                 role: token.role || "STUDENT",
                 address: token.address,
-                name: session.user?.name || `Student (${String(token.address).slice(0,6)})`,
+                name: (token.role === "EMPLOYER" ? "Senior Recruiter" : session.user?.name) || `User (${String(token.address).slice(0,6)})`,
                 email: session.user?.email || null,
             };
 
             (session as any).user = userObj;
-            
-            console.log("[AUTH] Final Session Delivered:", { 
-                role: userObj.role, 
-                address: userObj.address,
-                hasUser: !!session.user
-            });
-            
             return session;
         }
     },

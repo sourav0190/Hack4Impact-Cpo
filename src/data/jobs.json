@@ -1,0 +1,77 @@
+[
+  {
+    "id": "job_seeding_1",
+    "title": "Senior React Developer",
+    "description": "We are seeking a senior frontend engineer to build premium decentralized interfaces. Must be proficient in React and UI/UX.",
+    "company": "DecentraCorp",
+    "salary": "150k - 200k ALGO",
+    "requiredSkills": [
+      "React.js",
+      "JavaScript"
+    ],
+    "postedBy": "hire@decentracorp.com",
+    "createdAt": "2026-03-13T10:00:00.000Z"
+  },
+  {
+    "id": "job_seeding_2",
+    "title": "Blockchain Protocol Engineer",
+    "description": "Join our core team building Algorand smart contracts and consensus optimization layers.",
+    "company": "AlgoSafe Solutions",
+    "salary": "180k - 250k ALGO",
+    "requiredSkills": [
+      "Web3 & Algorand",
+      "Python Core"
+    ],
+    "postedBy": "admin@algosafe.org",
+    "createdAt": "2026-03-13T12:00:00.000Z"
+  },
+  {
+    "id": "job_1773424370157",
+    "title": "python devloper",
+    "description": "full stack python devloper",
+    "company": "abc",
+    "salary": "120k",
+    "requiredSkills": [
+      "python"
+    ],
+    "postedBy": "recruiter@google.corp",
+    "createdAt": "2026-03-13T17:52:50.157Z"
+  },
+  {
+    "id": "job_1773425627833",
+    "title": "Python backend devloper",
+    "description": "python backend devloper",
+    "company": "cdf",
+    "salary": "150k",
+    "requiredSkills": [
+      "python"
+    ],
+    "postedBy": "recruiter@google.corp",
+    "createdAt": "2026-03-13T18:13:47.833Z"
+  },
+  {
+    "id": "job_1773426010016",
+    "title": "React devloper",
+    "description": "fronted devloper",
+    "company": "qwer",
+    "salary": "100k",
+    "requiredSkills": [
+      "react"
+    ],
+    "postedBy": "recruiter@google.corp",
+    "createdAt": "2026-03-13T18:20:10.016Z"
+  },
+  {
+    "id": "job_1773426955578",
+    "title": "Fronted Devloper",
+    "description": "frontend",
+    "company": "ayush",
+    "salary": "90k",
+    "requiredSkills": [
+      "react",
+      "python"
+    ],
+    "postedBy": "recruiter@google.corp",
+    "createdAt": "2026-03-13T18:35:55.578Z"
+  }
+]
