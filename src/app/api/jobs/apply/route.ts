@@ -5,6 +5,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { fetchUserAssetsWithDetails } from '@/lib/algorand';
 
+// Recruitment Trust Layer - Production Gated API
+
 const JOBS_FILE = path.join(process.cwd(), 'src/data/jobs.json');
 const APPS_FILE = path.join(process.cwd(), 'src/data/applications.json');
 
