@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { fetchUserAssets } from '@/lib/algorand';
+import { fetchUserAssetsWithDetails } from '@/lib/algorand';
 
 const JOBS_FILE = path.join(process.cwd(), 'src/data/jobs.json');
 const APPS_FILE = path.join(process.cwd(), 'src/data/applications.json');
@@ -41,8 +41,8 @@ export async function POST(request: Request) {
         }
 
         // --- VERIFICATION LOGIC ---
-        // Fetch student's actual on-chain assets
-        const studentAssets = await fetchUserAssets(studentAddress);
+        // Fetch student's actual on-chain assets with names
+        const studentAssets = await fetchUserAssetsWithDetails(studentAddress);
         
         // Calculate score based on required skills
         // For simplicity, we match job's requiredSkills strings with asset names
@@ -106,7 +106,20 @@ export async function GET(request: Request) {
             
             // Rank by score
             filteredApps.sort((a: any, b: any) => b.skillMatchScore - a.skillMatchScore);
-            return NextResponse.json(filteredApps);
+
+            // Mask data for employers if not unlocked
+            const maskedApps = filteredApps.map((a: any) => {
+                if (a.isUnlocked) return a;
+                return {
+                    ...a,
+                    studentName: `Candidate ${a.studentAddress.slice(-4)}`,
+                    studentAddress: "Address Locked",
+                    studentEmail: undefined,
+                    studentPhone: undefined
+                };
+            });
+
+            return NextResponse.json(maskedApps);
         } else {
             // Students see their own apps
             const studentApps = apps.filter((a: any) => a.studentAddress === (session.user as any).address);

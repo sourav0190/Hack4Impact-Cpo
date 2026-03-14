@@ -361,11 +361,15 @@ export default function EmployerDashboard() {
                                 >
                                     <div className="flex items-center gap-4 flex-1 min-w-0">
                                         <div className="w-14 h-14 bg-white/5 rounded-2xl flex-shrink-0 flex items-center justify-center text-white font-black text-2xl border border-white/10 shadow-inner group-hover:border-gold/30 transition-all">
-                                            {app.studentName[0]}
+                                            {app.isUnlocked ? app.studentName[0] : "?"}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <h4 className="text-white font-black uppercase tracking-tight truncate">{app.studentName}</h4>
-                                            <p className="text-[10px] font-mono text-gray-500 truncate">{app.studentAddress}</p>
+                                            <h4 className="text-white font-black uppercase tracking-tight truncate">
+                                                {app.isUnlocked ? app.studentName : `Candidate ${app.studentAddress.slice(-4)}`}
+                                            </h4>
+                                            <p className="text-[10px] font-mono text-gray-500 truncate">
+                                                {app.isUnlocked ? app.studentAddress : "Address Locked • Pay to Reveal"}
+                                            </p>
                                         </div>
                                     </div>
 

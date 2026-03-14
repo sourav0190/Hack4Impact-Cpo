@@ -56,7 +56,7 @@ function ResultContent() {
             const { txid } = await algodClient.sendRawTransaction(signedTxn).do();
             const result = await waitForConfirmation(algodClient, txid, 4);
             
-            setMintedAssetId(result.assetIndex);
+            setMintedAssetId(Number(result.assetIndex));
             toast.success(`Success! Skill Badge Minted: #${result.assetIndex}`, { id: "mint" });
         } catch (err: any) {
             console.error(err);

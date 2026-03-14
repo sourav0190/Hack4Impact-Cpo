@@ -130,6 +130,28 @@ export async function fetchUserAssets(address: string) {
     }
 }
 
+export async function fetchUserAssetsWithDetails(address: string) {
+    const assets = await fetchUserAssets(address);
+    if (!assets.length) return [];
+    
+    try {
+        const detailedAssets = await Promise.all(
+            assets.map(async (a: any) => {
+                const details = await fetchAssetDetails(a.assetId);
+                return {
+                    ...a,
+                    name: details?.params?.name || "Unknown Badge",
+                    url: details?.params?.url || ""
+                };
+            })
+        );
+        return detailedAssets;
+    } catch (e) {
+        console.error("fetchUserAssetsWithDetails error:", e);
+        return assets;
+    }
+}
+
 export async function fetchAssetDetails(assetIndex: number | string | bigint) {
     try {
         const response = await algodClient.getAssetByID(Number(assetIndex)).do();
