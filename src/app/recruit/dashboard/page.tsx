@@ -129,10 +129,17 @@ export default function EmployerDashboard() {
         }
     };
 
-    const handleUnlock = async (appId: string, studentAddress: string) => {
+    const handleUnlock = async (appId: string, maskedAddress: string) => {
         if (!accountAddress) return;
         setIsLoading(true);
         try {
+            toast.loading("Securing Candidate Gateway...", { id: "unlock" });
+            
+            // 0. Fetch real address from Secure Gateway
+            const addrRes = await fetch(`/api/recruit/unlock?applicationId=${appId}`);
+            const { studentAddress, error: addrError } = await addrRes.json();
+            if (addrError) throw new Error(addrError);
+
             toast.loading("Initiating Web3 Payment Flow...", { id: "unlock" });
             
             const params = await algodClient.getTransactionParams().do();

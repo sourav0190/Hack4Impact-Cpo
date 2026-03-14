@@ -73,5 +73,19 @@
     ],
     "postedBy": "recruiter@google.corp",
     "createdAt": "2026-03-13T18:35:55.578Z"
+  },
+  {
+    "id": "job_1773458858511",
+    "title": "Full stack devloper",
+    "description": "full stack.....no vibe coding",
+    "company": "yash.com",
+    "salary": "100k",
+    "requiredSkills": [
+      "react",
+      "python",
+      ""
+    ],
+    "postedBy": "recruiter@google.corp",
+    "createdAt": "2026-03-14T03:27:38.511Z"
   }
 ]

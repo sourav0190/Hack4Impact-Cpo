@@ -25,6 +25,44 @@ function getStudents() {
     } catch { return []; }
 }
 
+const jobsFilePath = path.join(process.cwd(), "src/data/jobs.json");
+function getJobs() {
+    return JSON.parse(fs.readFileSync(jobsFilePath, "utf8"));
+}
+
+export async function GET(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== "EMPLOYER") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const applicationId = searchParams.get('applicationId');
+
+    if (!applicationId) {
+        return NextResponse.json({ error: "Missing applicationId" }, { status: 400 });
+    }
+
+    const apps = getApplications();
+    const app = apps.find((a: any) => a.id === applicationId);
+
+    if (!app) {
+        return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    }
+
+    // Security Check: Only the employer who posted the job can see the address
+    const jobs = getJobs();
+    const job = jobs.find((j: any) => j.id === app.jobId);
+
+    if (!job || job.postedBy !== session.user.email) {
+        return NextResponse.json({ error: "Unauthorized: You did not post this job" }, { status: 403 });
+    }
+
+    return NextResponse.json({ 
+        studentAddress: app.studentAddress 
+    });
+}
+
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session || (session.user as any).role !== "EMPLOYER") {
