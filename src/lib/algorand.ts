@@ -1,4 +1,5 @@
 import algosdk, { waitForConfirmation } from 'algosdk';
+export { waitForConfirmation };
 
 const ALGOD_TOKEN = '';
 const ALGOD_SERVER = 'https://testnet-api.algonode.cloud';
@@ -8,13 +9,13 @@ const INDEXER_TOKEN = '';
 const INDEXER_SERVER = 'https://testnet-idx.algonode.cloud';
 const INDEXER_PORT = '';
 
-const algodClient = new algosdk.Algodv2(ALGOD_TOKEN, ALGOD_SERVER, ALGOD_PORT);
-const indexerClient = new algosdk.Indexer(INDEXER_TOKEN, INDEXER_SERVER, INDEXER_PORT);
+export const algodClient = new algosdk.Algodv2(ALGOD_TOKEN, ALGOD_SERVER, ALGOD_PORT);
+export const indexerClient = new algosdk.Indexer(INDEXER_TOKEN, INDEXER_SERVER, INDEXER_PORT);
 
 /**
  * Clean and validate an Algorand address
  */
-function cleanAddress(addr: string | null | undefined): string | null {
+export function cleanAddress(addr: string | null | undefined): string | null {
     if (!addr) return null;
     const cleaned = String(addr).replace(/\s/g, "").trim();
     const isValid = algosdk.isValidAddress(cleaned);
@@ -25,7 +26,7 @@ function cleanAddress(addr: string | null | undefined): string | null {
 /**
  * Mint a Soulbound Token (ASA)
  */
-async function mintSBT(creatorAddr: string, studentAddr: string, assetName: string, assetUrl: string) {
+export async function mintSBT(creatorAddr: string, studentAddr: string, assetName: string, assetUrl: string) {
     const cAddr = cleanAddress(creatorAddr);
     const sAddr = cleanAddress(studentAddr);
 
@@ -68,7 +69,7 @@ async function mintSBT(creatorAddr: string, studentAddr: string, assetName: stri
     }
 }
 
-async function optInAsset(userAddr: string, assetIndex: number | string | bigint) {
+export async function optInAsset(userAddr: string, assetIndex: number | string | bigint) {
     const addr = cleanAddress(userAddr);
     if (!addr) throw new Error("Invalid user address");
     
@@ -85,7 +86,7 @@ async function optInAsset(userAddr: string, assetIndex: number | string | bigint
     return txn;
 }
 
-async function transferAsset(creatorAddr: string, studentAddr: string, assetIndex: number | string | bigint) {
+export async function transferAsset(creatorAddr: string, studentAddr: string, assetIndex: number | string | bigint) {
     const cAddr = cleanAddress(creatorAddr);
     const sAddr = cleanAddress(studentAddr);
     if (!cAddr || !sAddr) throw new Error("Invalid address provided for transfer");
@@ -105,7 +106,7 @@ async function transferAsset(creatorAddr: string, studentAddr: string, assetInde
     return txn;
 }
 
-async function fetchUserAssets(address: string) {
+export async function fetchUserAssets(address: string) {
     const addr = cleanAddress(address);
     if (!addr) return [];
     try {
@@ -129,7 +130,7 @@ async function fetchUserAssets(address: string) {
     }
 }
 
-async function fetchUserAssetsWithDetails(address: string) {
+export async function fetchUserAssetsWithDetails(address: string) {
     const assets = await fetchUserAssets(address);
     if (!assets.length) return [];
     
@@ -151,7 +152,7 @@ async function fetchUserAssetsWithDetails(address: string) {
     }
 }
 
-async function fetchAssetDetails(assetIndex: number | string | bigint) {
+export async function fetchAssetDetails(assetIndex: number | string | bigint) {
     try {
         const response = await algodClient.getAssetByID(Number(assetIndex)).do();
         // In algosdk v3, the response contains `index` and `params` directly at the top level
@@ -162,7 +163,7 @@ async function fetchAssetDetails(assetIndex: number | string | bigint) {
     }
 }
 
-const executeTalentBounty = async (senderAddress: string, studentAddress: string, universityAddress: string, signTransactionProvider: any) => {
+export const executeTalentBounty = async (senderAddress: string, studentAddress: string, universityAddress: string, signTransactionProvider: any) => {
     const sAddr = cleanAddress(senderAddress);
     const stAddr = cleanAddress(studentAddress);
     const uAddr = cleanAddress(universityAddress);
@@ -193,19 +194,6 @@ const executeTalentBounty = async (senderAddress: string, studentAddress: string
     
     const { txid } = await algodClient.sendRawTransaction(signedTxns).do();
     await waitForConfirmation(algodClient, txid, 4);
+    
     return txid;
-};
-
-export { 
-    algodClient,
-    indexerClient,
-    waitForConfirmation, 
-    cleanAddress, 
-    mintSBT, 
-    optInAsset, 
-    transferAsset, 
-    fetchUserAssets, 
-    fetchUserAssetsWithDetails, 
-    fetchAssetDetails, 
-    executeTalentBounty 
 };
