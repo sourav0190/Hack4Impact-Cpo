@@ -10,6 +10,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import algosdk from 'algosdk';
 
 const ZKProofModal = dynamic(() => import('@/components/ZKProofModal'), { ssr: false });
 const CertificateCard = dynamic(() => import('@/components/CertificateCard'), { ssr: false });
@@ -171,13 +172,14 @@ export default function DashboardPage() {
             const { txn: encodedTxn, error } = await response.json();
             if (error) throw new Error(error);
 
+            // 2. Decode the transaction using algosdk
+            const txnBytes = new Uint8Array(atob(encodedTxn).split("").map(c => c.charCodeAt(0)));
+            const decodedTxn = algosdk.decodeUnsignedTransaction(txnBytes);
+
             toast.loading("Awaiting Wallet Signature...", { id: "claim" });
 
-            // 2. Convert base64 to Uint8Array for Defly
-            const txnBytes = new Uint8Array(atob(encodedTxn).split("").map(c => c.charCodeAt(0)));
-
-            // 3. Sign using Defly (WalletContext provides deflyWallet)
-            const singleTxnGroups = [{ txn: txnBytes, signers: [accountAddress] }];
+            // 3. Sign using Defly (Signer expects Transaction object or similar with encoding schema)
+            const singleTxnGroups = [{ txn: decodedTxn, signers: [accountAddress] }];
             const signedResult = await (deflyWallet as any).signTransaction([singleTxnGroups]) as Uint8Array[];
             const signedTxn = signedResult[0];
 
