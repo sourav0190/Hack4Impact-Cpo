@@ -75,6 +75,28 @@
       ""
     ],
     "status": "PENDING",
-    "appliedAt": "2026-03-14T03:28:08.607Z"
+    "appliedAt": "2026-03-14T03:28:08.607Z",
+    "isUnlocked": true,
+    "unlockTx": "6QPDEYCDGREQYAALIGGSIB56EL5FJRUNV5V2DPQLIZ7UGSQB6W3Q",
+    "studentEmail": "btech41523099@dseu.ac.in",
+    "studentPhone": "789456023"
+  },
+  {
+    "id": "app_1773478883134",
+    "jobId": "job_1773478868094",
+    "jobTitle": "Backend devloper ",
+    "company": "abcfr",
+    "studentAddress": "Y6L3YTWYFQ3OS7VJMFWCYPR7H6BKVD33YGBP6OMRL2KQ5LA7IBSSXJDW7Y",
+    "studentName": "STUDENT (Y6L3YT...)",
+    "skillMatchScore": 100,
+    "matchedSkills": [
+      "python"
+    ],
+    "status": "PENDING",
+    "appliedAt": "2026-03-14T09:01:23.134Z",
+    "isUnlocked": true,
+    "unlockTx": "N26GPW55RDQ4ZAJBSUKQ72N3QZ3NOXEK6GYY6UZPXVOAIHYGY5LA",
+    "studentEmail": "btech41523099@dseu.ac.in",
+    "studentPhone": "789456023"
   }
 ]
