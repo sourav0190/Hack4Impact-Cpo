@@ -1,11 +1,11 @@
-# 🎓 VeriDegree
+# 🎓 VishwasID
 
-VeriDegree is a decentralized, privacy-preserving academic credential verification ecosystem. It leverages the Algorand blockchain to issue tamper-proof Soulbound Tokens (SBTs) representing degrees, IPFS for decentralized metadata storage, and Zero-Knowledge Proofs (zk-SNARKs) to allow students to prove their qualifications without revealing sensitive data like exact grades or CGPA.
+VishwasID is a decentralized, privacy-preserving academic credential verification ecosystem. It leverages the Algorand blockchain to issue tamper-proof Soulbound Tokens (SBTs) representing degrees, IPFS for decentralized metadata storage, and Zero-Knowledge Proofs (zk-SNARKs) to allow students to prove their qualifications without revealing sensitive data like exact grades or CGPA.
 
 ## 📂 Project Structure
 
 ```text
-veridegree/
+VishwasID/
 ├── src/
 │   ├── app/                # Next.js App Router Pages & API Routes
 │   │   └── api/            # Server-side logic (SBT Minting, AI Sanitization)
@@ -57,8 +57,8 @@ veridegree/
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/yourusername/veridegree.git
-    cd veridegree
+    git clone https://github.com/yourusername/VishwasID.git
+    cd VishwasID
     ```
 
 2.  **Install dependencies:**

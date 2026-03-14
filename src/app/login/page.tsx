@@ -75,7 +75,7 @@ export default function LoginPage() {
         setIsLoading(true);
         try {
             const nonce = `Sign this message to login as Recruiter: ${Date.now()}`;
-            
+
             const result = await signIn("algorand-auth", {
                 address: currentAddress,
                 signature: "demo_sig_verified_by_backend",
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
     const handleStudentLogin = async () => {
         let currentAddress = accountAddress;
-        
+
         if (!currentAddress) {
             currentAddress = await connect();
             if (!currentAddress) return; // User cancelled or failed
@@ -107,7 +107,7 @@ export default function LoginPage() {
 
         setIsLoading(true);
         try {
-            const nonce = `Sign this message to login to VeriDegree: ${Date.now()}`;
+            const nonce = `Sign this message to login to VishwasID: ${Date.now()}`;
             const enc = new TextEncoder();
             const messageBytes = enc.encode(nonce);
 
@@ -134,7 +134,7 @@ export default function LoginPage() {
             // For this implementation, we'll use a simple signature verification.
             // Note: WalletContext signer usually signs transactions. 
             // We'll simulate the cryptographic check for this demo.
-            
+
             const result = await signIn("algorand-auth", {
                 address: currentAddress,
                 signature: "demo_sig_verified_by_backend", // Placeholder for actual sig
@@ -172,7 +172,7 @@ export default function LoginPage() {
         <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#0a0a0a]">
             <section className="relative flex items-center justify-center p-8 pt-32 pb-20 lg:p-24 overflow-hidden border-b lg:border-b-0 lg:border-r border-white/5">
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,#1a1a1a_0%,transparent_50%)]" />
-                
+
                 <div className="relative w-full max-w-md animate-in fade-in slide-in-from-left duration-700">
                     <div className="flex items-center gap-3 mb-12">
                         <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
@@ -188,21 +188,21 @@ export default function LoginPage() {
                             {authTab === 'university' ? 'Welcome back, Admin.' : 'Hire with Confidence.'}
                         </h1>
                         <p className="text-gray-400">
-                            {authTab === 'university' 
-                                ? 'Securely issue and manage soulbound academic credentials for your students.' 
+                            {authTab === 'university'
+                                ? 'Securely issue and manage soulbound academic credentials for your students.'
                                 : 'Access verified talent through cryptographic proofs and on-chain attestations.'}
                         </p>
                     </div>
 
                     {/* Tabs */}
                     <div className="flex p-1 bg-white/5 rounded-2xl mb-8 border border-white/5">
-                        <button 
+                        <button
                             onClick={() => setAuthTab('university')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${authTab === 'university' ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
                         >
                             Institution
                         </button>
-                        <button 
+                        <button
                             onClick={() => setAuthTab('employer')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${authTab === 'employer' ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
                         >
@@ -217,8 +217,8 @@ export default function LoginPage() {
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                                <input 
-                                    type="email" 
+                                <input
+                                    type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder={authTab === 'university' ? "admin@university.edu" : "recruiter@google.corp"}
@@ -232,8 +232,8 @@ export default function LoginPage() {
                             <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                                <input 
-                                    type="password" 
+                                <input
+                                    type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
@@ -243,7 +243,7 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             disabled={isLoading}
                             className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 group mt-8"
                         >
@@ -259,7 +259,7 @@ export default function LoginPage() {
                             <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-black"><span className="bg-[#0a0a0a] px-4 text-gray-500">OR Web3 ID</span></div>
                         </div>
 
-                        <button 
+                        <button
                             type="button"
                             onClick={authTab === 'university' ? undefined : handleEmployerWalletLogin}
                             disabled={isLoading || authTab === 'university'}
@@ -285,7 +285,7 @@ export default function LoginPage() {
                         <div className="w-20 h-20 bg-gold/10 rounded-[32px] flex items-center justify-center text-gold mb-8 ring-1 ring-gold/20 shadow-[0_0_30px_rgba(235,203,144,0.1)]">
                             <ShieldCheck size={40} />
                         </div>
-                        
+
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/5 border border-gold/10 rounded-full text-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
                             <Sparkles size={12} /> Student Vault
                         </div>
@@ -295,7 +295,7 @@ export default function LoginPage() {
 
                         <div className="w-full max-w-sm">
                             {studentStep === 1 && (
-                                <form 
+                                <form
                                     onSubmit={(e) => { e.preventDefault(); setStudentStep(2); }}
                                     className="space-y-4 animate-in fade-in slide-in-from-bottom duration-500"
                                 >
@@ -305,35 +305,35 @@ export default function LoginPage() {
                                     </div>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                        <input 
+                                        <input
                                             type="text" required
                                             placeholder="Full Name"
                                             value={onboardingData.name}
-                                            onChange={e => setOnboardingData({...onboardingData, name: e.target.value})}
+                                            onChange={e => setOnboardingData({ ...onboardingData, name: e.target.value })}
                                             className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-2xl focus:border-gold/40 outline-none transition-all text-white text-sm"
                                         />
                                     </div>
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                        <input 
+                                        <input
                                             type="email" required
                                             placeholder="Professional Email"
                                             value={onboardingData.email}
-                                            onChange={e => setOnboardingData({...onboardingData, email: e.target.value})}
+                                            onChange={e => setOnboardingData({ ...onboardingData, email: e.target.value })}
                                             className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-2xl focus:border-gold/40 outline-none transition-all text-white text-sm"
                                         />
                                     </div>
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                        <input 
+                                        <input
                                             type="tel" required
                                             placeholder="Contact Number"
                                             value={onboardingData.phone}
-                                            onChange={e => setOnboardingData({...onboardingData, phone: e.target.value})}
+                                            onChange={e => setOnboardingData({ ...onboardingData, phone: e.target.value })}
                                             className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-2xl focus:border-gold/40 outline-none transition-all text-white text-sm"
                                         />
                                     </div>
-                                    <button 
+                                    <button
                                         type="submit"
                                         className="w-full bg-white hover:bg-gold text-black font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-2 group mt-6 text-sm uppercase tracking-widest"
                                     >
@@ -348,8 +348,8 @@ export default function LoginPage() {
                                         <h3 className="text-white font-bold text-lg mb-1">Step 2: Wallet Linking</h3>
                                         <p className="text-gray-500 text-xs">Link your authorized Algorand vault.</p>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={async () => {
                                             const addr = await connect();
                                             if (addr) setStudentStep(3);
@@ -360,7 +360,7 @@ export default function LoginPage() {
                                         <span className="text-xs uppercase tracking-[0.2em]">Connect Algorand Vault</span>
                                     </button>
 
-                                    <button 
+                                    <button
                                         onClick={() => setStudentStep(1)}
                                         className="text-gray-500 hover:text-white text-[10px] uppercase tracking-widest font-bold"
                                     >
@@ -383,8 +383,8 @@ export default function LoginPage() {
                                         </div>
                                         <p className="text-white font-mono text-[10px] truncate">{accountAddress}</p>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={handleStudentLogin}
                                         disabled={isLoading}
                                         className="w-full bg-gold hover:bg-gold-dark text-black font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 group shadow-gold-glow mt-4"
@@ -397,7 +397,7 @@ export default function LoginPage() {
                                         )}
                                     </button>
 
-                                    <button 
+                                    <button
                                         onClick={() => setStudentStep(2)}
                                         className="text-gray-500 hover:text-white text-[10px] uppercase tracking-widest font-bold"
                                     >
@@ -412,7 +412,7 @@ export default function LoginPage() {
                             <div className="w-1.5 h-1.5 rounded-full bg-gold" />
                             <div className="text-[10px] font-mono text-white tracking-widest uppercase">SNARKJS</div>
                             <div className="w-1.5 h-1.5 rounded-full bg-gold" />
-                            <div className="text-[10px] font-mono text-white tracking-widest uppercase">VERIDEGREE</div>
+                            <div className="text-[10px] font-mono text-white tracking-widest uppercase">VishwasID</div>
                         </div>
                     </div>
                 </div>

@@ -61,7 +61,7 @@ export default function Navbar() {
                     <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center border border-gold/20 group-hover:border-gold transition-all duration-500 shadow-gold-glow">
                         <GraduationCap size={22} className="text-gold group-hover:rotate-12 transition-transform" />
                     </div>
-                    <span className="text-xl font-black text-white tracking-widest uppercase hidden lg:block">Veri<span className="text-gold italic">Degree</span></span>
+                    <span className="text-xl font-black text-white tracking-widest uppercase hidden lg:block">Vishwas<span className="text-gold italic">ID</span></span>
                 </Link>
 
                 {/* Navigation Links */}

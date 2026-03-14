@@ -20,7 +20,7 @@ export default function EmbedBadgePage() {
                 // but usually the student opts-in and creator transfers it.
                 // We assume if it's held by anyone it's valid for this widget's demo purposes.
                 const holder = response.balances.find((b: any) => BigInt(b.amount) > 0n);
-                
+
                 if (holder) {
                     setStatus('valid');
                 } else {
@@ -40,7 +40,7 @@ export default function EmbedBadgePage() {
             <div className="bg-[#1a1a1a] border border-[#EBCB90]/20 rounded-2xl p-6 w-[280px] h-[130px] flex flex-col items-center justify-center shadow-2xl relative overflow-hidden group">
                 {/* Decorative gold gradient */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#EBCB90] to-transparent opacity-30" />
-                
+
                 {status === 'loading' ? (
                     <div className="flex flex-col items-center gap-2">
                         <Loader2 className="animate-spin text-[#EBCB90]" size={32} />
@@ -69,7 +69,7 @@ export default function EmbedBadgePage() {
 
                 {/* Subtle Brand Tag */}
                 <div className="absolute bottom-2 right-3">
-                    <span className="text-[7px] font-bold text-[#EBCB90]/20 tracking-[0.2em] uppercase">VeriDegree</span>
+                    <span className="text-[7px] font-bold text-[#EBCB90]/20 tracking-[0.2em] uppercase">VishwasID</span>
                 </div>
             </div>
         </div>

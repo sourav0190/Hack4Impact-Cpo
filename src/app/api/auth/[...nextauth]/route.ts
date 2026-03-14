@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) return null;
-                
+
                 const email = credentials.email.toLowerCase();
                 const hasValidDomain = EMPLOYER_DOMAINS.some(domain => email.endsWith(domain));
 
@@ -85,7 +85,7 @@ export const authOptions: NextAuthOptions = {
 
                 try {
                     const { address, signature, nonce, requestedRole } = credentials;
-                    
+
                     const isDemo = signature === "demo_sig_verified_by_backend";
                     let isValid = false;
 
@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
                     if (isValid) {
                         // Check if the address is an authorized recruiter
                         const isWhitelistedEmployer = EMPLOYER_WHITELIST.includes(address);
-                        
+
                         // If they specifically ask for EMPLOYER role and are whitelisted, grant it.
                         // Otherwise, default to STUDENT.
                         const finalRole = (requestedRole === "EMPLOYER" && isWhitelistedEmployer) ? "EMPLOYER" : "STUDENT";
@@ -131,7 +131,7 @@ export const authOptions: NextAuthOptions = {
             const userObj = {
                 role: token.role || "STUDENT",
                 address: token.address,
-                name: (token.role === "EMPLOYER" ? "Senior Recruiter" : session.user?.name) || `User (${String(token.address).slice(0,6)})`,
+                name: (token.role === "EMPLOYER" ? "Senior Recruiter" : session.user?.name) || `User (${String(token.address).slice(0, 6)})`,
                 email: session.user?.email || null,
             };
 
@@ -145,7 +145,7 @@ export const authOptions: NextAuthOptions = {
     session: {
         strategy: "jwt",
     },
-    secret: process.env.NEXTAUTH_SECRET || "complex_secret_placeholder_veridegree",
+    secret: process.env.NEXTAUTH_SECRET || "complex_secret_placeholder_VishwasID",
 };
 
 const handler = NextAuth(authOptions);

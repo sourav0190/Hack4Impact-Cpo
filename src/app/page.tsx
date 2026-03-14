@@ -2,13 +2,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-    GraduationCap, 
-    ShieldCheck, 
-    Zap, 
-    Lock, 
-    Search, 
-    ArrowRight, 
+import {
+    GraduationCap,
+    ShieldCheck,
+    Zap,
+    Lock,
+    Search,
+    ArrowRight,
     ChevronRight,
     CheckCircle2
 } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-                    <motion.div 
+                    <motion.div
                         initial="initial"
                         animate="animate"
                         variants={staggerContainer}
@@ -57,7 +57,7 @@ export default function LandingPage() {
                         </motion.h1>
 
                         <motion.p variants={fadeIn} className="text-xl text-gray-400 max-w-xl leading-relaxed font-medium">
-                            VeriDegree revolutionizes academic integrity using Algorand Soulbound Tokens and Zero-Knowledge Proofs. Secure issuance. Private verification.
+                            VishwasID revolutionizes academic integrity using Algorand Soulbound Tokens and Zero-Knowledge Proofs. Secure issuance. Private verification.
                         </motion.p>
 
                         <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-6 pt-4">
@@ -71,7 +71,7 @@ export default function LandingPage() {
                     </motion.div>
 
                     {/* Floating 3D Token Visual */}
-                    <motion.div 
+                    <motion.div
                         className="lg:col-span-5 relative hidden lg:block"
                         initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
                         animate={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -79,7 +79,7 @@ export default function LandingPage() {
                     >
                         <div className="relative aspect-square glass rounded-[4rem] flex items-center justify-center shadow-gold-heavy group">
                             <div className="absolute -inset-4 bg-gold/10 blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-                            <motion.div 
+                            <motion.div
                                 animate={{ y: [0, -20, 0], rotateY: [0, 180, 360] }}
                                 transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                                 className="w-48 h-48 bg-gradient-to-br from-gold/40 to-transparent rounded-3xl p-1 shadow-[0_0_50px_rgba(235,203,144,0.3)]"
@@ -88,7 +88,7 @@ export default function LandingPage() {
                                     <GraduationCap size={80} className="text-gold" />
                                 </div>
                             </motion.div>
-                            
+
                             {/* Orbiting Stats */}
                             <div className="absolute top-10 -left-10 glass p-4 rounded-3xl animate-bounce">
                                 <div className="text-[10px] font-bold text-gold uppercase tracking-widest mb-1">Status</div>
@@ -113,7 +113,7 @@ export default function LandingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Featured Large Card */}
-                        <motion.div 
+                        <motion.div
                             whileHover={{ y: -10 }}
                             className="md:col-span-2 glass p-10 rounded-[3rem] relative overflow-hidden group border-gold/10"
                         >
@@ -162,7 +162,7 @@ export default function LandingPage() {
                             <div className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 rounded-full text-gold text-[10px] font-black uppercase tracking-[0.3em]">
                                 Workflow
                             </div>
-                            <h2 className="text-5xl font-black text-white tracking-tighter leading-none">The Lifecycle of a <br /><span className="text-gold italic">VeriDegree</span>.</h2>
+                            <h2 className="text-5xl font-black text-white tracking-tighter leading-none">The Lifecycle of a <br /><span className="text-gold italic">VishwasID</span>.</h2>
                             <p className="text-gray-400 text-lg font-medium leading-relaxed">
                                 Our three-layer protocol ensures a seamless journey from graduation to employment.
                             </p>
@@ -173,26 +173,26 @@ export default function LandingPage() {
                             <div className="absolute left-6 top-8 bottom-8 w-px bg-gradient-to-b from-gold via-gold/20 to-transparent hidden md:block" />
 
                             {[
-                                { 
-                                    step: "01", 
-                                    title: "University Issuance", 
+                                {
+                                    step: "01",
+                                    title: "University Issuance",
                                     desc: "Institution portal validates degree data and mints a secure SBT on Algorand.",
-                                    Icon: GraduationCap 
+                                    Icon: GraduationCap
                                 },
-                                { 
-                                    step: "02", 
-                                    title: "Student Claiming", 
+                                {
+                                    step: "02",
+                                    title: "Student Claiming",
                                     desc: "Students claim their asset and generate cryptographic ZK-Proofs for selective disclosure.",
-                                    Icon: CheckCircle2 
+                                    Icon: CheckCircle2
                                 },
-                                { 
-                                    step: "03", 
-                                    title: "Instant Verification", 
+                                {
+                                    step: "03",
+                                    title: "Instant Verification",
                                     desc: "Recruiters scan the QR or check the hash for instantaneous, verifiable proof.",
-                                    Icon: Search 
+                                    Icon: Search
                                 }
                             ].map((item, i) => (
-                                <motion.div 
+                                <motion.div
                                     key={i}
                                     initial={{ opacity: 0, x: 20 }}
                                     whileInView={{ opacity: 1, x: 0 }}
@@ -217,7 +217,7 @@ export default function LandingPage() {
 
             {/* CTA Section */}
             <section className="py-32 px-6">
-                <motion.div 
+                <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     whileInView={{ scale: 1, opacity: 1 }}
                     viewport={{ once: true }}

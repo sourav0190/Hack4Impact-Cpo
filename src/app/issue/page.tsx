@@ -55,13 +55,13 @@ export default function IssuePage() {
 
             const txn = await transferAsset(cAddr, sAddr, mintedAssetId);
             const singleTxnGroups = [{ txn: txn, signers: [cAddr] }];
-            
+
             toast.loading("Sign Transfer in Defly...", { id: "transfer" });
             const signedTxn = await deflyWallet.signTransaction([singleTxnGroups]);
-            
+
             toast.loading("Broadcasting Transfer...", { id: "transfer" });
             const { txid } = await algodClient.sendRawTransaction(signedTxn).do();
-            
+
             toast.loading("Confirming Transfer...", { id: "transfer" });
             await waitForConfirmation(algodClient, txid, 4);
 
@@ -84,7 +84,7 @@ export default function IssuePage() {
             toast.error("Connect your Defly Wallet first!");
             return;
         }
-        
+
         setIsIssuing(true);
         try {
             // 1. Upload to IPFS
@@ -92,7 +92,7 @@ export default function IssuePage() {
             const metadata: Credential = {
                 ...formData,
                 issuer: accountAddress,
-                type: "VeriDegree SBT",
+                type: "VishwasID SBT",
                 timestamp: new Date().toISOString()
             };
             const ipfsHash = await uploadJSONToIPFS(metadata);
@@ -101,7 +101,7 @@ export default function IssuePage() {
 
             // 2. Prepare Mint Txn
             toast.loading("Building Algorand Transaction...", { id: "issue" });
-            
+
             if (typeof cleanAddress !== 'function') {
                 console.error("[CRITICAL] cleanAddress is not a function! Scope check:", { cleanAddress });
                 throw new Error("Internal Error: Wallet utility 'cleanAddress' is missing. Please refresh the page.");
@@ -117,9 +117,9 @@ export default function IssuePage() {
             if (!cAddr) throw new Error("Please reconnect your wallet - invalid address detected");
 
             const txn = await mintSBT(
-                cAddr, 
-                sAddr, 
-                `${sName}'s Degree`, 
+                cAddr,
+                sAddr,
+                `${sName}'s Degree`,
                 assetUrl
             );
 
@@ -128,12 +128,12 @@ export default function IssuePage() {
             const singleTxnGroups = [{ txn: txn, signers: [cAddr] }];
             const signedTxn = await deflyWallet.signTransaction([singleTxnGroups]);
             console.log("[DEBUG] Transaction signed successfully");
-            
+
             // 4. Send Txn
             toast.loading("Broadcasting Transaction...", { id: "issue" });
             const { txid } = await algodClient.sendRawTransaction(signedTxn).do();
             console.log("[DEBUG] Broadcasted! TxId:", txid);
-            
+
             // 5. Wait for Confirmation
             toast.loading("Waiting for confirmation...", { id: "issue" });
             const result = await waitForConfirmation(algodClient, txid, 4);
@@ -172,7 +172,7 @@ export default function IssuePage() {
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gold/5 blur-[120px] rounded-full -z-10" />
 
             <div className="max-w-4xl mx-auto pt-24">
-                <motion.header 
+                <motion.header
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col items-center mb-20 text-center"
@@ -188,14 +188,14 @@ export default function IssuePage() {
                     </p>
                 </motion.header>
 
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2 }}
                     className="relative group"
                 >
                     <div className="absolute -inset-1 bg-gold/20 blur-3xl opacity-20 group-hover:opacity-30 transition duration-1000"></div>
-                    
+
                     <div className="relative glass p-8 lg:p-16 rounded-[4rem] shadow-2xl overflow-hidden border-white/5">
                         {!accountAddress ? (
                             /* State A: Wallet Not Connected */
@@ -207,7 +207,7 @@ export default function IssuePage() {
                                 <p className="text-gray-400 max-w-md mb-10 leading-relaxed">
                                     Welcome back, Administrator. Please connect your institution's Algorand wallet to begin minting secure credentials.
                                 </p>
-                                <button 
+                                <button
                                     onClick={connect}
                                     className="bg-gold hover:bg-gold-dark text-black font-black px-12 py-5 rounded-2xl transition-all flex items-center gap-3 transform hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(235,203,144,0.2)]"
                                 >
@@ -243,10 +243,10 @@ export default function IssuePage() {
                                             <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
                                                 <User size={14} /> Student Meta-Identity
                                             </label>
-                                            <input 
+                                            <input
                                                 required
                                                 value={formData.studentName}
-                                                onChange={e => setFormData({...formData, studentName: e.target.value})}
+                                                onChange={e => setFormData({ ...formData, studentName: e.target.value })}
                                                 className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl focus:border-gold/30 focus:bg-white/10 outline-none transition-all text-white placeholder:text-white/10 font-medium"
                                                 placeholder="Legal Name of Student"
                                             />
@@ -255,10 +255,10 @@ export default function IssuePage() {
                                             <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
                                                 <FileText size={14} /> Enrollment ID / Roll Number
                                             </label>
-                                            <input 
+                                            <input
                                                 required
                                                 value={formData.enrollmentId}
-                                                onChange={e => setFormData({...formData, enrollmentId: e.target.value})}
+                                                onChange={e => setFormData({ ...formData, enrollmentId: e.target.value })}
                                                 className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl focus:border-gold/30 focus:bg-white/10 outline-none transition-all text-white placeholder:text-white/10 font-mono text-sm tracking-widest uppercase"
                                                 placeholder="e.g. CS-2026-042"
                                             />
@@ -267,10 +267,10 @@ export default function IssuePage() {
                                             <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
                                                 <Wallet size={14} /> Algorand Resolve Address
                                             </label>
-                                            <input 
+                                            <input
                                                 required
                                                 value={formData.studentAddr}
-                                                onChange={e => setFormData({...formData, studentAddr: e.target.value})}
+                                                onChange={e => setFormData({ ...formData, studentAddr: e.target.value })}
                                                 className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl focus:border-gold/30 focus:bg-white/10 outline-none transition-all text-white placeholder:text-white/10 font-mono text-xs"
                                                 placeholder="ALGO Address..."
                                             />
@@ -279,10 +279,10 @@ export default function IssuePage() {
                                             <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
                                                 <GraduationCap size={14} /> Academic Degree
                                             </label>
-                                            <input 
+                                            <input
                                                 required
                                                 value={formData.degree}
-                                                onChange={e => setFormData({...formData, degree: e.target.value})}
+                                                onChange={e => setFormData({ ...formData, degree: e.target.value })}
                                                 className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl focus:border-gold/30 focus:bg-white/10 outline-none transition-all text-white placeholder:text-white/10 font-medium"
                                                 placeholder="e.g. Master of Computer Science"
                                             />
@@ -291,11 +291,11 @@ export default function IssuePage() {
                                             <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
                                                 <BarChart size={14} /> Transcript CGPA
                                             </label>
-                                            <input 
+                                            <input
                                                 required
                                                 type="number" step="0.01"
                                                 value={formData.cgpa}
-                                                onChange={e => setFormData({...formData, cgpa: e.target.value})}
+                                                onChange={e => setFormData({ ...formData, cgpa: e.target.value })}
                                                 className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl focus:border-gold/30 focus:bg-white/10 outline-none transition-all text-white placeholder:text-white/10 font-medium"
                                                 placeholder="0.00 / 10.00"
                                             />
@@ -304,16 +304,16 @@ export default function IssuePage() {
 
                                     <div className="space-y-4">
                                         <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] ml-1 text-nowrap">Conferred Year</label>
-                                        <input 
+                                        <input
                                             required
                                             type="number"
                                             value={formData.gradYear}
-                                            onChange={e => setFormData({...formData, gradYear: Number(e.target.value)})}
+                                            onChange={e => setFormData({ ...formData, gradYear: Number(e.target.value) })}
                                             className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl focus:border-gold/30 focus:bg-white/10 outline-none transition-all text-white font-medium"
                                         />
                                     </div>
 
-                                    <button 
+                                    <button
                                         disabled={isIssuing}
                                         className="w-full bg-gold hover:bg-gold-dark disabled:opacity-30 disabled:cursor-not-allowed text-black font-black py-6 rounded-2xl flex items-center justify-center gap-4 transition-all mt-10 shadow-[0_10px_40px_rgba(235,203,144,0.15)] hover:shadow-[0_20px_50px_rgba(235,203,144,0.3)] transform hover:-translate-y-1 active:translate-y-0 text-xl uppercase tracking-tighter"
                                     >
@@ -339,7 +339,7 @@ export default function IssuePage() {
                                                     The SBT has been minted. Please advise the student to <span className="text-white font-bold underline underline-offset-4 decoration-gold/50 cursor-pointer">Opt-in</span> from their vault.
                                                 </p>
                                             </div>
-                                            
+
                                             <button
                                                 type="button"
                                                 onClick={handleTransfer}

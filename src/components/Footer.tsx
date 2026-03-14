@@ -8,7 +8,7 @@ export default function Footer() {
         <footer className="relative z-10 pt-24 pb-12 px-6 overflow-hidden">
             {/* Background Glow */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gold/5 blur-[120px] rounded-full -z-10 opacity-30" />
-            
+
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                     <div className="col-span-1 md:col-span-2 space-y-6">
@@ -19,7 +19,7 @@ export default function Footer() {
                             <span className="text-2xl font-black text-white tracking-widest uppercase">Veri<span className="text-gold italic">Degree</span></span>
                         </Link>
                         <p className="text-gray-400 max-w-sm leading-relaxed font-medium">
-                            The world's first standardized protocol for decentralized academic trust. 
+                            The world's first standardized protocol for decentralized academic trust.
                             Built on Algorand for ultimate security and transparency.
                         </p>
                         <div className="flex gap-4">
@@ -28,8 +28,8 @@ export default function Footer() {
                                 { Icon: Twitter, href: "https://twitter.com" },
                                 { Icon: Linkedin, href: "https://linkedin.com" }
                             ].map((social, i) => (
-                                <a 
-                                    key={i} 
+                                <a
+                                    key={i}
                                     href={social.href}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -66,7 +66,7 @@ export default function Footer() {
 
                 <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-6 text-[10px] font-mono tracking-widest text-gray-500 uppercase">
-                        <span>© 2026 VeriDegree Protocol</span>
+                        <span>© 2026 VishwasID Protocol</span>
                         <span className="hidden md:block">•</span>
                         <span>Built on Algorand Mainnet</span>
                     </div>

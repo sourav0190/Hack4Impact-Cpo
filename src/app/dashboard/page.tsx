@@ -33,7 +33,7 @@ export default function DashboardPage() {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
     const [sharingAsset, setSharingAsset] = useState<Asset | null>(null);
-    
+
     // Opt-in state
     const [claimAssetId, setClaimAssetId] = useState<string>('');
     const [isClaiming, setIsClaiming] = useState<boolean>(false);
@@ -50,9 +50,9 @@ export default function DashboardPage() {
             console.log(`[VAULT] Requesting assets for: ${accountAddress}`);
             const response = await fetch(`/api/assets?address=${accountAddress}`);
             const data = await response.json();
-            
+
             if (data.error) throw new Error(data.error);
-            
+
             console.log(`[VAULT] Received ${data.assets?.length || 0} education assets from API`);
             setAssets(data.assets || []);
         } catch (error: any) {
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             ctx.drawImage(img, 20, 20);
             const pngFile = canvas.toDataURL('image/png');
             const downloadLink = document.createElement('a');
-            downloadLink.download = `VeriDegree_QR_${sharingAsset.id}.png`;
+            downloadLink.download = `VishwasID_QR_${sharingAsset.id}.png`;
             downloadLink.href = pngFile;
             downloadLink.click();
             toast.success("QR Code downloaded!");
@@ -158,7 +158,7 @@ export default function DashboardPage() {
         setIsClaiming(true);
         try {
             toast.loading("Preparing Cryptographic Opt-in...", { id: "claim" });
-            
+
             // 1. Get Unsigned Txn from API
             const response = await fetch('/api/assets/opt-in', {
                 method: 'POST',
@@ -172,17 +172,17 @@ export default function DashboardPage() {
             if (error) throw new Error(error);
 
             toast.loading("Awaiting Wallet Signature...", { id: "claim" });
-            
+
             // 2. Convert base64 to Uint8Array for Defly
             const txnBytes = new Uint8Array(atob(encodedTxn).split("").map(c => c.charCodeAt(0)));
-            
+
             // 3. Sign using Defly (WalletContext provides deflyWallet)
             const singleTxnGroups = [{ txn: txnBytes, signers: [accountAddress] }];
             const signedResult = await (deflyWallet as any).signTransaction([singleTxnGroups]) as Uint8Array[];
             const signedTxn = signedResult[0];
-            
+
             toast.loading("Verifying on Algorand...", { id: "claim" });
-            
+
             // 4. Send signed txn to API
             // Convert Uint8Array to base64 string safely in browser
             const base64SignedTxn = btoa(
@@ -243,7 +243,7 @@ export default function DashboardPage() {
                     <div className="absolute top-0 left-0 w-full h-1 bg-red-500/20" />
                     <ShieldCheck size={64} className="text-red-500 mb-8 mx-auto opacity-50" />
                     <h1 className="text-4xl font-black text-white mb-6 uppercase tracking-tighter italic">Access <span className="text-red-500 underline decoration-red-500/30">Denied</span></h1>
-                    
+
                     <div className="bg-white/5 py-4 px-6 rounded-2xl mb-10 border border-white/5 inline-flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                         <p className="text-gray-400 text-[10px] font-mono uppercase tracking-widest">Identity Trace: <span className="text-white font-bold">{user?.role || "GUEST"}</span></p>
@@ -253,10 +253,10 @@ export default function DashboardPage() {
                         This decentralized node requires a verified <span className="text-white font-bold tracking-widest uppercase text-[10px] bg-white/5 px-2 py-1 rounded">Student_Credential</span>. Your current identity layer is authorized for external portal access only.
                     </p>
 
-                    <button 
+                    <button
                         onClick={() => {
                             window.location.href = "/login";
-                        }} 
+                        }}
                         className="w-full bg-gold hover:bg-gold-dark text-black font-black px-10 py-5 rounded-[2rem] transition-all shadow-gold-glow uppercase tracking-widest text-xs flex items-center justify-center gap-3"
                     >
                         <RefreshCw size={18} /> Switch to Student Wallet
@@ -276,7 +276,7 @@ export default function DashboardPage() {
 
             <div className="max-w-7xl mx-auto mt-10">
                 <header className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-4"
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="flex items-center gap-4"
                     >
-                        <button 
+                        <button
                             onClick={loadAssets}
                             disabled={isLoading}
                             className="p-4 glass rounded-2xl text-gold hover:bg-gold/10 transition-all active:scale-95 group"
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                 <AnimatePresence mode="wait">
                     {/* Wallet Sync Status / Mismatch Warning */}
                     {isAddressMismatch && (
-                        <motion.div 
+                        <motion.div
                             key="mismatch"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -325,12 +325,12 @@ export default function DashboardPage() {
                                     <div>
                                         <h4 className="text-white font-bold text-lg tracking-tight uppercase">Security Mismatch</h4>
                                         <p className="text-red-400/80 text-sm font-medium">
-                                            Current: <span className="font-mono text-white underline">{accountAddress.slice(0, 6)}...{accountAddress.slice(-6)}</span>. 
+                                            Current: <span className="font-mono text-white underline">{accountAddress.slice(0, 6)}...{accountAddress.slice(-6)}</span>.
                                             Expected: <span className="font-mono text-white underline">{user.address.slice(0, 6)}...{user.address.slice(-6)}</span>.
                                         </p>
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={connect}
                                     className="bg-red-500 hover:bg-red-600 text-white font-black px-8 py-3 rounded-2xl transition-all shadow-lg active:scale-95 text-xs uppercase tracking-widest"
                                 >
@@ -342,7 +342,7 @@ export default function DashboardPage() {
 
                     {/* Main Content Area */}
                     {!accountAddress ? (
-                        <motion.div 
+                        <motion.div
                             key="no-wallet"
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -355,7 +355,7 @@ export default function DashboardPage() {
                             </div>
                             <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-4">Vault Inaccessible</h2>
                             <p className="text-gray-500 max-w-sm mb-12">Please connect your authorized Algorand wallet (Testnet) to synthesize your academic credentials.</p>
-                            <button 
+                            <button
                                 onClick={connect}
                                 className="bg-gold hover:bg-gold-dark text-black font-black px-12 py-5 rounded-2xl transition-all shadow-gold-glow uppercase tracking-widest text-sm flex items-center gap-3 active:scale-95"
                             >
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                             </button>
                         </motion.div>
                     ) : isLoading ? (
-                        <motion.div 
+                        <motion.div
                             key="loading"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -377,7 +377,7 @@ export default function DashboardPage() {
                             <p className="text-gold mt-8 font-black text-sm tracking-[0.5em] animate-pulse">SYNCHRONIZING LEDGER...</p>
                         </motion.div>
                     ) : (
-                        <motion.div 
+                        <motion.div
                             key="assets"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -392,16 +392,16 @@ export default function DashboardPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.1 }}
                                         >
-                                            <CertificateCard 
-                                                asset={asset as any} 
-                                                onGenerateProof={() => handleOpenProofModal(asset)} 
+                                            <CertificateCard
+                                                asset={asset as any}
+                                                onGenerateProof={() => handleOpenProofModal(asset)}
                                                 onShareBadge={() => handleOpenShareBadge(asset)}
                                             />
                                         </motion.div>
                                     ))
                                 ) : (
                                     <div className="col-span-full py-24 text-center glass rounded-[2.5rem] border-dashed border-white/5">
-                                        <p className="text-gray-500 font-medium italic tracking-tight">No VeriDegree SBTs discovered in this node.</p>
+                                        <p className="text-gray-500 font-medium italic tracking-tight">No VishwasID SBTs discovered in this node.</p>
                                     </div>
                                 )}
                             </div>
@@ -420,7 +420,7 @@ export default function DashboardPage() {
                             {/* Assessment & Claim Sections */}
                             <div className="pt-12 border-t border-white/5 grid grid-cols-1 lg:grid-cols-2 gap-10">
                                 {/* Skill Assessment Card */}
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
@@ -429,7 +429,7 @@ export default function DashboardPage() {
                                     <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <GraduationCap size={160} className="text-gold" />
                                     </div>
-                                    
+
                                     <div className="relative z-10 space-y-6">
                                         <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center text-gold ring-1 ring-gold/30">
                                             <GraduationCap size={32} />
@@ -441,7 +441,7 @@ export default function DashboardPage() {
                                     </div>
 
                                     <div className="relative z-10 pt-10">
-                                        <Link 
+                                        <Link
                                             href="/assess"
                                             className="w-full bg-gold hover:bg-gold-dark text-black font-black px-10 py-5 rounded-2xl transition-all shadow-gold-glow active:scale-95 uppercase tracking-widest text-xs flex items-center justify-center gap-3"
                                         >
@@ -451,7 +451,7 @@ export default function DashboardPage() {
                                 </motion.div>
 
                                 {/* Claim New Degree Card */}
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                                     <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <PlusCircle size={160} className="text-gold" />
                                     </div>
-                                    
+
                                     <div className="relative z-10 space-y-6">
                                         <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center text-gold ring-1 ring-gold/30">
                                             <PlusCircle size={32} />
@@ -475,7 +475,7 @@ export default function DashboardPage() {
                                         <form onSubmit={handleClaim} className="flex flex-col sm:flex-row gap-3">
                                             <div className="relative flex-1">
                                                 <Code className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                                <input 
+                                                <input
                                                     type="text"
                                                     value={claimAssetId}
                                                     onChange={(e) => setClaimAssetId(e.target.value)}
@@ -483,7 +483,7 @@ export default function DashboardPage() {
                                                     className="w-full bg-black/40 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white font-mono placeholder:text-gray-700 placeholder:font-sans"
                                                 />
                                             </div>
-                                            <button 
+                                            <button
                                                 type="submit"
                                                 disabled={isClaiming || !claimAssetId}
                                                 className="bg-white hover:bg-gold text-black font-black px-8 py-5 rounded-2xl transition-all shadow-xl active:scale-95 disabled:opacity-50 uppercase tracking-widest text-xs flex items-center justify-center gap-2"
@@ -506,13 +506,13 @@ export default function DashboardPage() {
                 <AnimatePresence>
                     {showProfileSetup && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-2xl p-4">
-                            <motion.div 
+                            <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 className="glass border-gold/30 w-full max-w-lg rounded-[3.5rem] p-12 text-center relative overflow-hidden"
                             >
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gold/30" />
-                                
+
                                 <div className="w-20 h-20 bg-gold/10 rounded-3xl flex items-center justify-center text-gold mx-auto mb-8 border border-gold/20 shadow-gold-glow">
                                     <Briefcase size={40} />
                                 </div>
@@ -527,36 +527,36 @@ export default function DashboardPage() {
                                 <form onSubmit={handleSaveProfile} className="space-y-4">
                                     <div className="relative">
                                         <PlusCircle className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                        <input 
+                                        <input
                                             type="text" required
                                             value={profileData.name}
-                                            onChange={e => setProfileData({...profileData, name: e.target.value})}
+                                            onChange={e => setProfileData({ ...profileData, name: e.target.value })}
                                             placeholder="Professional Full Name"
                                             className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white"
                                         />
                                     </div>
                                     <div className="relative">
                                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                        <input 
+                                        <input
                                             type="email" required
                                             value={profileData.email}
-                                            onChange={e => setProfileData({...profileData, email: e.target.value})}
+                                            onChange={e => setProfileData({ ...profileData, email: e.target.value })}
                                             placeholder="Professional Email (for recruiters)"
                                             className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white"
                                         />
                                     </div>
                                     <div className="relative">
                                         <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-gold/40" size={18} />
-                                        <input 
+                                        <input
                                             type="tel" required
                                             value={profileData.phone}
-                                            onChange={e => setProfileData({...profileData, phone: e.target.value})}
+                                            onChange={e => setProfileData({ ...profileData, phone: e.target.value })}
                                             placeholder="Contact Number"
                                             className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl focus:border-gold/40 outline-none transition-all text-white"
                                         />
                                     </div>
 
-                                    <button 
+                                    <button
                                         type="submit"
                                         disabled={isSavingProfile}
                                         className="w-full bg-gold hover:bg-gold-dark text-black font-black py-5 rounded-2xl transition-all shadow-gold-glow uppercase tracking-widest text-xs flex items-center justify-center gap-3 mt-4"
@@ -570,28 +570,28 @@ export default function DashboardPage() {
                 </AnimatePresence>
 
                 {/* Modals */}
-                <ZKProofModal 
-                    isOpen={isModalOpen} 
-                    onClose={() => setIsModalOpen(false)} 
-                    asset={selectedAsset} 
+                <ZKProofModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    asset={selectedAsset}
                 />
 
                 {/* Share Badge Modal */}
                 <AnimatePresence>
                     {isShareModalOpen && sharingAsset && (
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4"
                         >
-                            <motion.div 
+                            <motion.div
                                 initial={{ scale: 0.9, y: 20 }}
                                 animate={{ scale: 1, y: 0 }}
                                 className="glass border-gold/30 w-full max-w-2xl rounded-[3rem] p-10 relative shadow-gold-glow max-h-[90vh] overflow-y-auto"
                             >
-                                <button 
-                                    onClick={() => setIsShareModalOpen(false)} 
+                                <button
+                                    onClick={() => setIsShareModalOpen(false)}
                                     className="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors bg-white/5 p-2 rounded-xl"
                                 >
                                     <X size={20} />
@@ -618,7 +618,7 @@ export default function DashboardPage() {
                                                 <pre className="bg-black/50 border border-white/10 p-5 rounded-2xl text-[10px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap leading-relaxed">
                                                     {`<iframe src="${window.location.origin}/embed/${sharingAsset.id}" width="300" height="150" frameborder="0"></iframe>`}
                                                 </pre>
-                                                <button 
+                                                <button
                                                     onClick={() => copyToClipboard(`<iframe src="${window.location.origin}/embed/${sharingAsset.id}" width="300" height="150" frameborder="0"></iframe>`, 'HTML')}
                                                     className="absolute top-3 right-3 bg-gold/20 hover:bg-gold text-gold hover:text-black p-2.5 rounded-xl transition-all shadow-gold-glow"
                                                 >
@@ -634,10 +634,10 @@ export default function DashboardPage() {
                                             </label>
                                             <div className="relative group">
                                                 <pre className="bg-black/50 border border-white/10 p-5 rounded-2xl text-[10px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                                                    {`[![VeriDegree](${window.location.origin}/embed/${sharingAsset.id})](${window.location.origin}/verify?asset=${sharingAsset.id})`}
+                                                    {`[![VishwasID](${window.location.origin}/embed/${sharingAsset.id})](${window.location.origin}/verify?asset=${sharingAsset.id})`}
                                                 </pre>
-                                                <button 
-                                                    onClick={() => copyToClipboard(`[![VeriDegree](${window.location.origin}/embed/${sharingAsset.id})](${window.location.origin}/verify?asset=${sharingAsset.id})`, 'Markdown')}
+                                                <button
+                                                    onClick={() => copyToClipboard(`[![VishwasID](${window.location.origin}/embed/${sharingAsset.id})](${window.location.origin}/verify?asset=${sharingAsset.id})`, 'Markdown')}
                                                     className="absolute top-3 right-3 bg-gold/20 hover:bg-gold text-gold hover:text-black p-2.5 rounded-xl transition-all shadow-gold-glow"
                                                 >
                                                     <Copy size={14} />
@@ -651,11 +651,11 @@ export default function DashboardPage() {
                                         <label className="text-[10px] font-black text-gold uppercase tracking-[0.2em] flex items-center gap-2 mb-6">
                                             <QrCode size={14} /> Paper-to-Chain
                                         </label>
-                                        
+
                                         <div className="bg-white p-4 rounded-[2rem] mb-6 shadow-2xl">
-                                            <QRCodeSVG 
+                                            <QRCodeSVG
                                                 id="qr-code-svg"
-                                                value={`${window.location.origin}/verify?assetId=${sharingAsset.id}`} 
+                                                value={`${window.location.origin}/verify?assetId=${sharingAsset.id}`}
                                                 size={150}
                                                 level="H"
                                                 includeMargin={false}
@@ -666,7 +666,7 @@ export default function DashboardPage() {
                                             Instant physical-to-digital bridge for resume verification.
                                         </p>
 
-                                        <button 
+                                        <button
                                             onClick={downloadQRCode}
                                             className="w-full bg-white hover:bg-gold hover:text-black text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all active:scale-95"
                                         >
